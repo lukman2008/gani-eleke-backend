@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { createSupply, getSupplies, getSupplyById, updateSupply, updateStock, deleteSupply, getSupplySummary, getCategories } = require('../controllers/supplyController');
-const { protect } = require('../middleware/authMiddleware');
+const { createSupply, getSupplies, getSupplyById, updateSupply, updateStock, deleteSupply, getSupplySummary, getCategories, clearSupplies } = require('../controllers/supplyController');
+const { protect, authorizeAdmin } = require('../middleware/authMiddleware');
 
 // All routes require authentication
 router.use(protect);
@@ -15,6 +15,9 @@ router.route('/summary')
 
 router.route('/categories')
   .get(getCategories);
+
+router.route('/clear')
+  .delete(authorizeAdmin, clearSupplies);
 
 router.route('/:id')
   .get(getSupplyById)
