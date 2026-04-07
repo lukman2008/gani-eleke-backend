@@ -68,4 +68,34 @@ const loginUser = async (req, res) => {
   });
 };
 
-module.exports = { registerAdmin, loginUser };
+const createUser = async (req, res) => {
+  const { name, email, password, role } = req.body;
+
+  if (!name || !email || !password) {
+    return res.status(400).json({ message: 'Name, email and password are required for staff creation.' });
+  }
+
+  const existingUser = await User.findOne({ email });
+  if (existingUser) {
+    return res.status(400).json({ message: 'A user with that email already exists.' });
+  }
+
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(password, salt);
+
+  const user = await User.create({
+    name,
+    email,
+    password: hashedPassword,
+    role: role || 'manager',
+  });
+
+  res.status(201).json({
+    id: user._id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+  });
+};
+
+module.exports = { registerAdmin, loginUser, createUser };

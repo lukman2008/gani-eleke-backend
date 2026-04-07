@@ -27,4 +27,11 @@ const protect = async (req, res, next) => {
   }
 };
 
-module.exports = { protect };
+const authorizeAdmin = (req, res, next) => {
+  if (!req.user || req.user.role !== 'admin') {
+    return res.status(403).json({ message: 'Admin privileges required.' });
+  }
+  next();
+};
+
+module.exports = { protect, authorizeAdmin };

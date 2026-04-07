@@ -161,6 +161,11 @@ const getReceiptSummary = async (req, res) => {
   });
 };
 
+const clearReceipts = async (req, res) => {
+  await Receipt.deleteMany({});
+  res.json({ message: 'All receipts and balances have been cleared.' });
+};
+
 const getReceiptPdf = async (req, res) => {
   const receipt = await Receipt.findById(req.params.id).populate('createdBy', 'name email role');
   if (!receipt) {
@@ -326,4 +331,4 @@ const getReceiptPdf = async (req, res) => {
   doc.end();
 };
 
-module.exports = { createReceipt, getReceipts, getReceiptById, updateReceipt, deleteReceipt, getReceiptSummary, getReceiptPdf };
+module.exports = { createReceipt, getReceipts, getReceiptById, updateReceipt, deleteReceipt, getReceiptSummary, clearReceipts, getReceiptPdf };
