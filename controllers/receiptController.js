@@ -189,12 +189,12 @@ const getReceiptPdf = async (req, res) => {
   const accentColor = '#0ea5e9'; // blue-500
   const lightGray = '#f1f5f9'; // slate-100
 
-  // Helper function to draw line
+  
   const drawLine = (y) => {
     doc.strokeColor(lightGray).lineWidth(1).moveTo(50, y).lineTo(545, y).stroke();
   };
 
-  // Header Section
+  
   doc.fillColor(primaryColor);
   doc.fontSize(24).font('Helvetica-Bold').text('GANI ELEKE ENT', 50, 50, { align: 'center' });
   doc.moveDown(0.3);
@@ -203,7 +203,7 @@ const getReceiptPdf = async (req, res) => {
   doc.moveDown(0.2);
   doc.fontSize(8).text('Lagos, Nigeria | Phone: 08012345678 | Email: info@ganieleke.com', { align: 'center' });
 
-  // Receipt Title Box
+  
   doc.roundedRect(400, 80, 120, 40, 5).fillAndStroke(accentColor, accentColor);
   doc.fillColor('white').fontSize(14).font('Helvetica-Bold');
   doc.text('RECEIPT', 400, 95, { width: 120, align: 'center' });

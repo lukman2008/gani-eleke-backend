@@ -110,4 +110,9 @@ const getLandRentSummary = async (req, res) => {
   });
 };
 
-module.exports = { createLandRent, getLandRents, getLandRentById, updateLandRent, deleteLandRent, getLandRentSummary };
+const clearLandRents = async (req, res) => {
+  await LandRent.deleteMany({});
+  res.json({ message: 'All land rentals have been cleared.' });
+};
+
+module.exports = { createLandRent, getLandRents, getLandRentById, updateLandRent, deleteLandRent, getLandRentSummary, clearLandRents };

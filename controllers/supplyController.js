@@ -147,4 +147,9 @@ const getCategories = async (req, res) => {
   res.json(categories);
 };
 
-module.exports = { createSupply, getSupplies, getSupplyById, updateSupply, updateStock, deleteSupply, getSupplySummary, getCategories };
+const clearSupplies = async (req, res) => {
+  await Supply.deleteMany({});
+  res.json({ message: 'All supplies have been cleared.' });
+};
+
+module.exports = { createSupply, getSupplies, getSupplyById, updateSupply, updateStock, deleteSupply, getSupplySummary, getCategories, clearSupplies };
