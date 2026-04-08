@@ -16,24 +16,34 @@ const app = express();
 const port = process.env.PORT || 5000;
 
 // Configure CORS for both local and production
+const allowedOrigins = [
+    'http://localhost:5500',
+    'http://127.0.0.1:5500',
+    'http://localhost:5000',
+    'https://gani-eleke-project.vercel.app',
+    'https://gani-eleke-backend.onrender.com'
+];
+
 app.use(cors({
-    origin: ['http://localhost:5500', 'http://127.0.0.1:5500', 'https://gani-eleke-backend.onrender.com', process.env.FRONTEND_URL],
-    credentials: true
+    origin: function(origin, callback) {
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.indexOf(origin) === -1) {
+            const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+            return callback(new Error(msg), false);
+        }
+        return callback(null, true);
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static files from the frontend directory
-app.use(express.static(path.join(__dirname, '../frontend')));
-
-// API Routes
+// API Routes - MUST come before static files
 app.get('/api/health', (req, res) => {
     res.json({ status: 'OK', environment: process.env.NODE_ENV || 'development' });
-});
-
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '../frontend/index.html'));
 });
 
 app.use('/api/auth', authRoutes);
@@ -49,8 +59,7 @@ app.use((err, req, res, next) => {
 
 app.listen(port, () => {
     console.log(`🚀 Server running on port ${port}`);
-    console.log(`📍 Local: http://localhost:${port}`);
-    console.log(`📍 API: http://localhost:${port}/api/health`);
+    console.log(`📍 Local API: http://localhost:${port}/api/health`);
 });
 
 // const express = require('express');
