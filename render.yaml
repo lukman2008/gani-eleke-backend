@@ -1,11 +1,18 @@
 services:
   - type: web
     name: gani-eleke-backend
-    runtime: image
-    repo: https://github.com/lukman2008/gani-eleke-frontend
+    runtime: node
+    repo: https://github.com/lukman2008/gani-eleke-backend
     branch: main
     rootDir: backend
-    dockerfilePath: ./Dockerfile
+    buildCommand: npm install
+    startCommand: node index.js
+    buildpacks:
+      - https://github.com/render-oss/chrome-render-buildpack.git
     envVars:
       - key: NODE_ENV
         value: production
+      - key: PUPPETEER_SKIP_DOWNLOAD
+        value: "true"
+      - key: PUPPETEER_EXECUTABLE_PATH
+        value: "/opt/render/.chrome-for-testing/chrome-linux64/chrome"

@@ -54,7 +54,6 @@ const getChromePath = () => {
     }
 };
 
-// Helper to launch Puppeteer based on environment
 const getBrowser = async () => {
     const launchArgs = [
         '--no-sandbox',
@@ -63,53 +62,55 @@ const getBrowser = async () => {
         '--disable-gpu'
     ];
     
-    // Chrome path in Docker container
-    const chromePath = '/usr/bin/google-chrome-stable';
-    
+    // Production on Render.com
     if (process.env.NODE_ENV === 'production') {
-        console.log('Production - Looking for Chrome at:', chromePath);
+        // The buildpack installs Chrome at this exact path
+        const chromePath = '/opt/render/.chrome-for-testing/chrome-linux64/chrome';
         
-        if (!fs.existsSync(chromePath)) {
-            console.error('Chrome not found! Available files in /usr/bin:');
-            const files = fs.readdirSync('/usr/bin').filter(f => f.includes('chrome'));
-            console.error('Chrome-related files:', files);
-            throw new Error(`Chrome not found at ${chromePath}`);
+        console.log('Looking for Chrome at:', chromePath);
+        
+        if (fs.existsSync(chromePath)) {
+            console.log('✅ Chrome found at:', chromePath);
+            return await puppeteer.launch({
+                executablePath: chromePath,
+                args: launchArgs,
+                headless: 'new'
+            });
         }
         
-        console.log('Production - Launching Chrome from:', chromePath);
-        
-        return await puppeteer.launch({
-            executablePath: chromePath,
-            args: launchArgs,
-            headless: 'new'
-        });
-    } else {
-        // Local development - Windows
-        const windowsPaths = [
-            'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-            'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
-            process.env.LOCALAPPDATA + '\\Google\\Chrome\\Application\\chrome.exe'
-        ];
-        
-        let chromePath = null;
-        for (const p of windowsPaths) {
-            if (fs.existsSync(p)) {
-                chromePath = p;
-                console.log('Development - Found Chrome at:', chromePath);
-                break;
-            }
+        // Try alternative path
+        const altPath = '/usr/bin/google-chrome-stable';
+        if (fs.existsSync(altPath)) {
+            console.log('✅ Chrome found at:', altPath);
+            return await puppeteer.launch({
+                executablePath: altPath,
+                args: launchArgs,
+                headless: 'new'
+            });
         }
         
-        if (!chromePath) {
-            throw new Error('Chrome not found! Please install Google Chrome.');
-        }
-        
-        return await puppeteer.launch({
-            executablePath: chromePath,
-            args: launchArgs,
-            headless: 'new'
-        });
+        throw new Error(`Chrome not found. Tried: ${chromePath}, ${altPath}`);
     }
+    
+    // Local development
+    const windowsPaths = [
+        'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+        'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+        process.env.LOCALAPPDATA + '\\Google\\Chrome\\Application\\chrome.exe'
+    ];
+    
+    for (const p of windowsPaths) {
+        if (fs.existsSync(p)) {
+            console.log('Local Chrome found at:', p);
+            return await puppeteer.launch({
+                executablePath: p,
+                args: launchArgs,
+                headless: 'new'
+            });
+        }
+    }
+    
+    throw new Error('Chrome not found locally');
 };
 
 /* =========================
