@@ -42,49 +42,43 @@ try {
 }
 
 /* =========================
-   IMAGE GENERATION USING API (NO CHROME NEEDED!)
+   IMAGE GENERATION USING API
 ========================= */
 
 const generateImageResponse = async (html, filename, res) => {
     try {
         console.log('Converting HTML to image using API...');
         
-        // Call HTMLCSSTOIMAGE API to convert HTML to PNG
+        // Call API
         const response = await axios.post('https://hcti.io/v1/image', {
             html: html,
-            css: "",
-            google_fonts: "Roboto"
+            css: "body { padding: 20px; background: white; }",
+            google_fonts: "Inter"
         }, {
             auth: {
                 username: HCTI_USER_ID,
                 password: HCTI_API_KEY
             },
-            timeout: 30000 // 30 second timeout
+            timeout: 60000
         });
         
         if (response.data && response.data.url) {
-            console.log('API returned image URL:', response.data.url);
-            
-            // Download the generated image
             const imageResponse = await axios.get(response.data.url, {
                 responseType: 'arraybuffer',
-                timeout: 30000
+                timeout: 60000
             });
             
-            // Send the image to client
             res.setHeader('Content-Type', 'image/png');
             res.setHeader('Content-Disposition', `attachment; filename="${filename}.png"`);
             res.send(imageResponse.data);
-            console.log('Image sent successfully to client');
+            console.log('Image sent successfully');
         } else {
             throw new Error('API did not return an image URL');
         }
         
     } catch (error) {
         console.error('API Error:', error.message);
-        
-        // Fallback: Send HTML if image generation fails
-        console.log('Falling back to HTML format...');
+        // Fallback to HTML
         res.setHeader('Content-Type', 'text/html');
         res.setHeader('Content-Disposition', `attachment; filename="${filename}.html"`);
         res.send(html);
@@ -92,7 +86,7 @@ const generateImageResponse = async (html, filename, res) => {
 };
 
 /* =========================
-   COMPUTE RECEIPT
+   COMPUTE RECEIPT - UPDATED WITH DUST MINUS FROM QTY
 ========================= */
 
 const computeReceipt = ({ customerName, credits = [], less = [], note }) => {
@@ -100,20 +94,25 @@ const computeReceipt = ({ customerName, credits = [], less = [], note }) => {
     const qty = Number(item.qty || 0);
     const rate = Number(item.rate || 0);
     const dust = Number(item.dust || 0);
-
     const initialRate = Number(item.initialRate) || rate;
+    
+    // Calculate effective quantity after dust deduction
+    const effectiveQty = Math.max(0, qty - dust);
+    
+    // Calculate amounts
     const initialAmount = qty * initialRate;
-    const finalAmount = (qty * rate) - dust;
+    const finalAmount = effectiveQty * rate;
     const profit = finalAmount - initialAmount;
 
     return {
       description: item.description || '',
-      qty,
-      rate,
-      dust,
-      initialRate,
+      qty: qty,
+      dust: dust,
+      effectiveQty: effectiveQty,
+      rate: rate,
+      initialRate: initialRate,
       amount: Math.max(finalAmount, 0),
-      profit,
+      profit: profit,
       iAmount: initialAmount,
       fAmount: finalAmount
     };
@@ -155,7 +154,7 @@ const createReceipt = async (req, res) => {
   const receipt = await Receipt.create({
     ...rest,
     ...data,
-    companyName: companyName || 'Africa Steel Ltd',
+    companyName: companyName || '',
     receiptNumber: `RCPT-${Date.now()}`,
     createdBy: req.user._id
   });
@@ -237,7 +236,7 @@ const deleteReceipt = async (req, res) => {
 };
 
 /* =========================
-   GET RECEIPT SUMMARY
+   GET RECEIPT SUMMARY - UPDATED WITH AGENT REVENUE
 ========================= */
 
 const getReceiptSummary = async (req, res) => {
@@ -247,11 +246,23 @@ const getReceiptSummary = async (req, res) => {
   const totalDebitAmount = receipts.reduce((sum, receipt) => sum + (receipt.debitTotal || 0), 0);
   const totalBalance = receipts.reduce((sum, receipt) => sum + (receipt.balance || 0), 0);
   
+  // Calculate Agent Revenue (Total Profit from all receipts)
+  let totalAgentRevenue = 0;
+  for (const receipt of receipts) {
+    for (const item of receipt.credits) {
+      const iAmount = item.qty * (item.initialRate || item.rate);
+      const fAmount = (item.effectiveQty || (item.qty - item.dust)) * item.rate;
+      const profit = fAmount - iAmount;
+      totalAgentRevenue += profit > 0 ? profit : 0;
+    }
+  }
+  
   res.json({
     totalReceipts,
     totalCreditAmount,
     totalDebitAmount,
     totalBalance,
+    totalAgentRevenue
   });
 };
 
@@ -279,15 +290,22 @@ const getReceiptPdf = async (req, res) => {
         const month = (date.getMonth() + 1).toString().padStart(2, '0');
         const year = date.getFullYear().toString().slice(-2);
         const logoUrl = getLogoUrl();
+        
+        // Use the company name from the receipt or empty string
+        const companyName = receipt.companyName || '';
 
         if (type === 'customer') {
             let totalCredit = 0;
             const items = receipt.credits.map((item, index) => {
-                const amount = (item.qty * item.rate) - (item.dust || 0);
+                const effectiveQty = Math.max(0, (item.qty || 0) - (item.dust || 0));
+                const amount = effectiveQty * (item.rate || 0);
                 totalCredit += amount;
                 return {
-                    ...item,
+                    description: item.description || '',
                     dust: item.dust || 0,
+                    qty: item.qty || 0,
+                    effectiveQty: effectiveQty,
+                    rate: item.rate || 0,
                     amount: formatNumber(amount),
                     odd: index % 2 === 1
                 };
@@ -295,16 +313,17 @@ const getReceiptPdf = async (req, res) => {
 
             const html = compiledCustomerTemplate({
                 logoUrl, day, month, year,
-                companyName: receipt.companyName || 'Africa Steel Ltd',
+                companyName: companyName,
                 customerName: receipt.customerName || '',
                 customerAddress: receipt.customerAddress || '',
                 customerPhone: receipt.customerPhone || '',
                 vehicleNo: receipt.vehicle || '',
-                items,
+                items: items,
                 offloadingAmount: formatNumber(receipt.less.find(l => l.description === 'Offloading')?.amount || 0),
+                debtAmount: formatNumber(receipt.less.find(l => l.description === 'Debt Deduction')?.amount || 0),
                 creditAmount: formatCurrency(totalCredit),
-                debitAmount: formatCurrency(receipt.debitTotal),
-                balanceAmount: formatCurrency(receipt.balance)
+                debitAmount: formatCurrency(receipt.debitTotal || 0),
+                balanceAmount: formatCurrency(receipt.balance || 0)
             });
 
             return await generateImageResponse(html, `customer-receipt-${receipt.receiptNumber}`, res);
@@ -315,20 +334,22 @@ const getReceiptPdf = async (req, res) => {
             const profits = [];
             
             const items = receipt.credits.map((item, index) => {
-                const iAmount = item.qty * (item.initialRate || item.rate);
-                const fAmount = (item.qty * item.rate) - (item.dust || 0);
+                const effectiveQty = Math.max(0, (item.qty || 0) - (item.dust || 0));
+                const iAmount = (item.qty || 0) * (item.initialRate || item.rate || 0);
+                const fAmount = effectiveQty * (item.rate || 0);
                 const profit = fAmount - iAmount;
                 totalCredit += fAmount;
-                totalProfit += profit;
+                totalProfit += profit > 0 ? profit : 0;
                 if (profit !== 0) {
-                    profits.push({ name: item.description, amount: formatCurrency(profit) });
+                    profits.push({ name: item.description || '', amount: formatCurrency(profit) });
                 }
                 return {
-                    description: item.description,
+                    description: item.description || '',
                     dust: item.dust || 0,
-                    qty: item.qty,
-                    iRate: item.initialRate || item.rate,
-                    fRate: item.rate,
+                    qty: item.qty || 0,
+                    effectiveQty: effectiveQty,
+                    iRate: item.initialRate || item.rate || 0,
+                    fRate: item.rate || 0,
                     iAmount: formatNumber(iAmount),
                     fAmount: formatNumber(fAmount),
                     odd: index % 2 === 1
@@ -337,18 +358,19 @@ const getReceiptPdf = async (req, res) => {
 
             const html = compiledCompanyTemplate({
                 logoUrl, day, month, year,
-                companyName: receipt.companyName || 'Africa Steel Ltd',
+                companyName: companyName,
                 customerName: receipt.customerName || '',
                 customerAddress: receipt.customerAddress || '',
                 customerPhone: receipt.customerPhone || '',
                 vehicleNo: receipt.vehicle || '',
-                items,
+                items: items,
                 offloadingAmount: formatNumber(receipt.less.find(l => l.description === 'Offloading')?.amount || 0),
-                profits,
+                debtAmount: formatNumber(receipt.less.find(l => l.description === 'Debt Deduction')?.amount || 0),
+                profits: profits,
                 totalProfit: formatCurrency(totalProfit),
                 creditAmount: formatCurrency(totalCredit),
-                debitAmount: formatCurrency(receipt.debitTotal),
-                balanceAmount: formatCurrency(receipt.balance)
+                debitAmount: formatCurrency(receipt.debitTotal || 0),
+                balanceAmount: formatCurrency(receipt.balance || 0)
             });
 
             return await generateImageResponse(html, `company-receipt-${receipt.receiptNumber}`, res);
