@@ -9,5 +9,3 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PUPPETEER_SKIP_DOWNLOAD
-        value: "true"

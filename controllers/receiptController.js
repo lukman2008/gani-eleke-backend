@@ -54,28 +54,74 @@ const getChromePath = () => {
     }
 };
 
-// Launch browser
+// Helper to launch Puppeteer based on environment
 const getBrowser = async () => {
-    const chromePath = getChromePath();
+    let launchArgs = [
+        '--no-sandbox', 
+        '--disable-setuid-sandbox', 
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+        '--disable-web-security'
+    ];
     
-    if (!chromePath) {
-        throw new Error('Chrome executable not found. Please ensure Chrome is installed.');
+    if (process.env.NODE_ENV === 'production') {
+        // Production on Render.com - Chrome installed via Docker
+        const chromePaths = [
+            '/usr/bin/google-chrome-stable',
+            '/usr/bin/google-chrome',
+            '/usr/bin/chromium-browser',
+            '/usr/bin/chromium'
+        ];
+        
+        let chromePath = null;
+        for (const path of chromePaths) {
+            if (fs.existsSync(path)) {
+                chromePath = path;
+                console.log('Found Chrome at:', chromePath);
+                break;
+            }
+        }
+        
+        if (!chromePath) {
+            throw new Error('Chrome not found! Please check Docker installation.');
+        }
+        
+        console.log('Production - Launching Chrome from:', chromePath);
+        
+        return await puppeteer.launch({
+            executablePath: chromePath,
+            args: launchArgs,
+            headless: 'new'
+        });
+    } else {
+        // Local development - find Chrome on Windows
+        const possiblePaths = [
+            'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+            'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+            process.env.LOCALAPPDATA + '\\Google\\Chrome\\Application\\chrome.exe'
+        ];
+        
+        let chromePath = null;
+        for (const path of possiblePaths) {
+            if (fs.existsSync(path)) {
+                chromePath = path;
+                console.log('Found Chrome at:', chromePath);
+                break;
+            }
+        }
+        
+        if (!chromePath) {
+            throw new Error('Chrome not found! Please install Google Chrome.');
+        }
+        
+        console.log('Development - Launching Chrome from:', chromePath);
+        
+        return await puppeteer.launch({
+            executablePath: chromePath,
+            args: launchArgs,
+            headless: 'new'
+        });
     }
-    
-    console.log('Launching browser with Chrome at:', chromePath);
-    
-    return await puppeteer.launch({
-        executablePath: chromePath,
-        args: [
-            '--no-sandbox',
-            '--disable-setuid-sandbox',
-            '--disable-dev-shm-usage',
-            '--disable-gpu',
-            '--disable-web-security'
-        ],
-        headless: 'new',
-        timeout: 60000
-    });
 };
 
 /* =========================
