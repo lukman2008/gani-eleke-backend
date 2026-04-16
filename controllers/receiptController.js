@@ -17,52 +17,64 @@ const formatNumber = (num) => num.toLocaleString('en-US');
 
 const getLogoUrl = () => 'https://gani-eleke-project.vercel.app/frontend/img/logo.jpeg';
 
-// Helper to find Chrome executable path on Windows
-const findChromePath = () => {
-    const possiblePaths = [
-        'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-        'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
-        'C:\\Users\\' + require('os').userInfo().username + '\\AppData\\Local\\Google\\Chrome\\Application\\chrome.exe',
-        process.env.LOCALAPPDATA + '\\Google\\Chrome\\Application\\chrome.exe',
-        process.env.PROGRAMFILES + '\\Google\\Chrome\\Application\\chrome.exe',
-        process.env['PROGRAMFILES(X86)'] + '\\Google\\Chrome\\Application\\chrome.exe'
-    ];
-    
-    for (const chromePath of possiblePaths) {
-        if (fs.existsSync(chromePath)) {
-            console.log('Found Chrome at:', chromePath);
-            return chromePath;
+// Find Chrome path based on environment
+const getChromePath = () => {
+    if (process.env.NODE_ENV === 'production') {
+        // Docker container paths
+        const paths = [
+            '/usr/bin/google-chrome-stable',
+            '/usr/bin/chromium-browser',
+            '/usr/bin/chromium',
+            '/opt/chrome/chrome'
+        ];
+        
+        for (const p of paths) {
+            if (fs.existsSync(p)) {
+                console.log('Found Chrome at:', p);
+                return p;
+            }
         }
+        console.error('Chrome not found! Available paths:', paths);
+        return null;
+    } else {
+        // Windows local development
+        const paths = [
+            'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+            'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+            process.env.LOCALAPPDATA + '\\Google\\Chrome\\Application\\chrome.exe'
+        ];
+        
+        for (const p of paths) {
+            if (fs.existsSync(p)) {
+                console.log('Found Chrome at:', p);
+                return p;
+            }
+        }
+        return null;
     }
-    return null;
 };
 
-// Helper to launch Puppeteer based on environment
+// Launch browser
 const getBrowser = async () => {
-    let executablePath;
+    const chromePath = getChromePath();
     
-    if (process.env.NODE_ENV === 'production') {
-        executablePath = '/usr/bin/google-chrome-stable';
-    } else {
-        executablePath = findChromePath();
-        
-        if (!executablePath) {
-            throw new Error('Google Chrome not found! Please install Google Chrome.');
-        }
+    if (!chromePath) {
+        throw new Error('Chrome executable not found. Please ensure Chrome is installed.');
     }
-
-    console.log('Launching Chrome from:', executablePath);
+    
+    console.log('Launching browser with Chrome at:', chromePath);
     
     return await puppeteer.launch({
-        executablePath,
+        executablePath: chromePath,
         args: [
-            '--no-sandbox', 
-            '--disable-setuid-sandbox', 
-            '--disable-web-security',
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
             '--disable-dev-shm-usage',
-            '--disable-gpu'
+            '--disable-gpu',
+            '--disable-web-security'
         ],
-        headless: "new"
+        headless: 'new',
+        timeout: 60000
     });
 };
 
@@ -108,12 +120,9 @@ const generateImageResponse = async (html, filename, res) => {
             timeout: 60000
         });
 
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise(resolve => setTimeout(resolve, 3000));
 
         let element = await page.$('.max-w-\\[800px\\]');
-        if (!element) {
-            element = await page.$('.receipt-container');
-        }
         if (!element) {
             element = await page.$('body');
         }

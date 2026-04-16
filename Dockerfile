@@ -1,19 +1,23 @@
-FROM node:20-slim
+# Use Render's official Chrome image
+FROM render/chrome:latest
 
-# Install Chromium
-RUN apt-get update && apt-get install -y chromium
-
-# Set environment variable for Puppeteer
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+# Install Node.js 18
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
+    apt-get install -y nodejs
 
 WORKDIR /app
 
+# Copy package files
 COPY package*.json ./
-RUN npm install --production
 
+# Install dependencies
+RUN npm install
+
+# Copy application code
 COPY . .
 
-EXPOSE 10000
+# Expose port
+EXPOSE 5000
 
+# Start the application
 CMD ["node", "index.js"]
