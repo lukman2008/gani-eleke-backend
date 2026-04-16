@@ -2,7 +2,7 @@
 const fs = require('fs');
 const path = require('path');
 const handlebars = require('handlebars');
-const puppeteer = require('puppeteer-core');
+const axios = require('axios');
 
 /* =========================
    HELPERS & CONFIG
@@ -17,101 +17,9 @@ const formatNumber = (num) => num.toLocaleString('en-US');
 
 const getLogoUrl = () => 'https://gani-eleke-project.vercel.app/frontend/img/logo.jpeg';
 
-// Find Chrome path based on environment
-const getChromePath = () => {
-    if (process.env.NODE_ENV === 'production') {
-        // Docker container paths
-        const paths = [
-            '/usr/bin/google-chrome-stable',
-            '/usr/bin/chromium-browser',
-            '/usr/bin/chromium',
-            '/opt/chrome/chrome'
-        ];
-        
-        for (const p of paths) {
-            if (fs.existsSync(p)) {
-                console.log('Found Chrome at:', p);
-                return p;
-            }
-        }
-        console.error('Chrome not found! Available paths:', paths);
-        return null;
-    } else {
-        // Windows local development
-        const paths = [
-            'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-            'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
-            process.env.LOCALAPPDATA + '\\Google\\Chrome\\Application\\chrome.exe'
-        ];
-        
-        for (const p of paths) {
-            if (fs.existsSync(p)) {
-                console.log('Found Chrome at:', p);
-                return p;
-            }
-        }
-        return null;
-    }
-};
-
-const getBrowser = async () => {
-    const launchArgs = [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-gpu'
-    ];
-    
-    // Production on Render.com
-    if (process.env.NODE_ENV === 'production') {
-        // The buildpack installs Chrome at this exact path
-        const chromePath = '/opt/render/.chrome-for-testing/chrome-linux64/chrome';
-        
-        console.log('Looking for Chrome at:', chromePath);
-        
-        if (fs.existsSync(chromePath)) {
-            console.log('✅ Chrome found at:', chromePath);
-            return await puppeteer.launch({
-                executablePath: chromePath,
-                args: launchArgs,
-                headless: 'new'
-            });
-        }
-        
-        // Try alternative path
-        const altPath = '/usr/bin/google-chrome-stable';
-        if (fs.existsSync(altPath)) {
-            console.log('✅ Chrome found at:', altPath);
-            return await puppeteer.launch({
-                executablePath: altPath,
-                args: launchArgs,
-                headless: 'new'
-            });
-        }
-        
-        throw new Error(`Chrome not found. Tried: ${chromePath}, ${altPath}`);
-    }
-    
-    // Local development
-    const windowsPaths = [
-        'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-        'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
-        process.env.LOCALAPPDATA + '\\Google\\Chrome\\Application\\chrome.exe'
-    ];
-    
-    for (const p of windowsPaths) {
-        if (fs.existsSync(p)) {
-            console.log('Local Chrome found at:', p);
-            return await puppeteer.launch({
-                executablePath: p,
-                args: launchArgs,
-                headless: 'new'
-            });
-        }
-    }
-    
-    throw new Error('Chrome not found locally');
-};
+// Your HTMLCSSTOIMAGE API credentials
+const HCTI_USER_ID = '01KPBNPMNFC057VW7R1Q2ERBCE';
+const HCTI_API_KEY = '019d975b-52af-730a-ad51-dbd52470e6ee';
 
 /* =========================
    TEMPLATE COMPILATION
@@ -134,53 +42,52 @@ try {
 }
 
 /* =========================
-   IMAGE GENERATION ENGINE
+   IMAGE GENERATION USING API (NO CHROME NEEDED!)
 ========================= */
 
 const generateImageResponse = async (html, filename, res) => {
-    let browser;
     try {
-        console.log('Starting browser for image generation...');
-        browser = await getBrowser();
-        const page = await browser.newPage();
+        console.log('Converting HTML to image using API...');
         
-        page.setDefaultTimeout(60000);
-        page.setDefaultNavigationTimeout(60000);
-        
-        await page.setViewport({ width: 850, height: 1200, deviceScaleFactor: 2 });
-
-        console.log('Setting HTML content...');
-        await page.setContent(html, { 
-            waitUntil: 'networkidle0',
-            timeout: 60000
+        // Call HTMLCSSTOIMAGE API to convert HTML to PNG
+        const response = await axios.post('https://hcti.io/v1/image', {
+            html: html,
+            css: "",
+            google_fonts: "Roboto"
+        }, {
+            auth: {
+                username: HCTI_USER_ID,
+                password: HCTI_API_KEY
+            },
+            timeout: 30000 // 30 second timeout
         });
-
-        await new Promise(resolve => setTimeout(resolve, 3000));
-
-        let element = await page.$('.max-w-\\[800px\\]');
-        if (!element) {
-            element = await page.$('body');
-        }
         
-        if (element) {
-            console.log('Taking screenshot...');
-            const buffer = await element.screenshot({ type: 'png' });
-            console.log('Screenshot taken successfully');
+        if (response.data && response.data.url) {
+            console.log('API returned image URL:', response.data.url);
+            
+            // Download the generated image
+            const imageResponse = await axios.get(response.data.url, {
+                responseType: 'arraybuffer',
+                timeout: 30000
+            });
+            
+            // Send the image to client
             res.setHeader('Content-Type', 'image/png');
             res.setHeader('Content-Disposition', `attachment; filename="${filename}.png"`);
-            return res.send(buffer);
+            res.send(imageResponse.data);
+            console.log('Image sent successfully to client');
+        } else {
+            throw new Error('API did not return an image URL');
         }
-        throw new Error("Receipt container not found");
+        
     } catch (error) {
-        console.error('Puppeteer Error:', error);
-        if (!res.headersSent) {
-            res.status(500).json({ error: 'Image generation failed', details: error.message });
-        }
-    } finally {
-        if (browser) {
-            await browser.close();
-            console.log('Browser closed');
-        }
+        console.error('API Error:', error.message);
+        
+        // Fallback: Send HTML if image generation fails
+        console.log('Falling back to HTML format...');
+        res.setHeader('Content-Type', 'text/html');
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}.html"`);
+        res.send(html);
     }
 };
 
