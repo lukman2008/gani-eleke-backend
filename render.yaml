@@ -2,7 +2,7 @@ services:
   - type: web
     name: gani-eleke-backend
     runtime: image
-    repo: https://github.com/lukman2008/gani-eleke-backend
+    repo: https://github.com/lukman2008/gani-eleke-frontend
     branch: main
     rootDir: backend
     dockerfilePath: ./Dockerfile
