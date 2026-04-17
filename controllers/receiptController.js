@@ -49,10 +49,9 @@ const generateImageResponse = async (html, filename, res) => {
     try {
         console.log('Converting HTML to image using API...');
         
-        // Call API
         const response = await axios.post('https://hcti.io/v1/image', {
             html: html,
-            css: "body { padding: 20px; background: white; }",
+            css: "body { padding: 20px; background: white; font-family: 'Inter', sans-serif; }",
             google_fonts: "Inter"
         }, {
             auth: {
@@ -78,7 +77,6 @@ const generateImageResponse = async (html, filename, res) => {
         
     } catch (error) {
         console.error('API Error:', error.message);
-        // Fallback to HTML
         res.setHeader('Content-Type', 'text/html');
         res.setHeader('Content-Disposition', `attachment; filename="${filename}.html"`);
         res.send(html);
@@ -86,7 +84,7 @@ const generateImageResponse = async (html, filename, res) => {
 };
 
 /* =========================
-   COMPUTE RECEIPT - UPDATED WITH DUST MINUS FROM QTY
+   COMPUTE RECEIPT - CORRECT CALCULATIONS
 ========================= */
 
 const computeReceipt = ({ customerName, credits = [], less = [], note }) => {
@@ -96,13 +94,16 @@ const computeReceipt = ({ customerName, credits = [], less = [], note }) => {
     const dust = Number(item.dust || 0);
     const initialRate = Number(item.initialRate) || rate;
     
-    // Calculate effective quantity after dust deduction
+    // Calculate effective quantity after dust deduction (QTY - DUST)
     const effectiveQty = Math.max(0, qty - dust);
     
     // Calculate amounts
-    const initialAmount = qty * initialRate;
-    const finalAmount = effectiveQty * rate;
-    const profit = finalAmount - initialAmount;
+    // I-Amount = I-Rate × QTY (total buying cost)
+    const iAmount = qty * initialRate;
+    // F-Amount = F-Rate × effectiveQty (total selling value after dust)
+    const fAmount = effectiveQty * rate;
+    // Profit = F-Amount - I-Amount
+    const profit = fAmount - iAmount;
 
     return {
       description: item.description || '',
@@ -111,10 +112,10 @@ const computeReceipt = ({ customerName, credits = [], less = [], note }) => {
       effectiveQty: effectiveQty,
       rate: rate,
       initialRate: initialRate,
-      amount: Math.max(finalAmount, 0),
+      amount: Math.max(fAmount, 0),
       profit: profit,
-      iAmount: initialAmount,
-      fAmount: finalAmount
+      iAmount: iAmount,
+      fAmount: fAmount
     };
   });
 
@@ -123,17 +124,20 @@ const computeReceipt = ({ customerName, credits = [], less = [], note }) => {
     amount: Number(item.amount || 0),
   }));
 
-  const subTotal = normalizedCredits.reduce((sum, i) => sum + i.amount, 0);
-  const debitTotal = normalizedLess.reduce((sum, i) => sum + i.amount, 0);
-  const balance = subTotal - debitTotal;
+  // Total Credit = sum of all F-Amounts (total selling value)
+  const totalCredit = normalizedCredits.reduce((sum, i) => sum + i.fAmount, 0);
+  // Total Debit = sum of all deductions (Offloading + Debt)
+  const totalDebit = normalizedLess.reduce((sum, i) => sum + i.amount, 0);
+  // Balance = Credit - Debit
+  const balance = Math.max(0, totalCredit - totalDebit);
 
   return {
     customerName,
     credits: normalizedCredits,
     less: normalizedLess,
-    subTotal,
-    debitTotal,
-    balance,
+    subTotal: totalCredit,
+    debitTotal: totalDebit,
+    balance: balance,
     note,
   };
 };
@@ -236,7 +240,7 @@ const deleteReceipt = async (req, res) => {
 };
 
 /* =========================
-   GET RECEIPT SUMMARY - UPDATED WITH AGENT REVENUE
+   GET RECEIPT SUMMARY - SEPARATE FROM LAND RENT
 ========================= */
 
 const getReceiptSummary = async (req, res) => {
@@ -247,12 +251,11 @@ const getReceiptSummary = async (req, res) => {
   const totalBalance = receipts.reduce((sum, receipt) => sum + (receipt.balance || 0), 0);
   
   // Calculate Agent Revenue (Total Profit from all receipts)
+  // Profit = sum of (F-Amount - I-Amount) for all items
   let totalAgentRevenue = 0;
   for (const receipt of receipts) {
     for (const item of receipt.credits) {
-      const iAmount = item.qty * (item.initialRate || item.rate);
-      const fAmount = (item.effectiveQty || (item.qty - item.dust)) * item.rate;
-      const profit = fAmount - iAmount;
+      const profit = (item.fAmount || 0) - (item.iAmount || 0);
       totalAgentRevenue += profit > 0 ? profit : 0;
     }
   }
@@ -291,7 +294,6 @@ const getReceiptPdf = async (req, res) => {
         const year = date.getFullYear().toString().slice(-2);
         const logoUrl = getLogoUrl();
         
-        // Use the company name from the receipt or empty string
         const companyName = receipt.companyName || '';
 
         if (type === 'customer') {
