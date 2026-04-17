@@ -322,7 +322,10 @@ const getReceiptPdf = async (req, res) => {
                 vehicleNo: receipt.vehicle || '',
                 items: items,
                 offloadingAmount: formatNumber(receipt.less.find(l => l.description === 'Offloading')?.amount || 0),
-                debtAmount: formatNumber(receipt.less.find(l => l.description === 'Debt Deduction')?.amount || 0),
+                debtAmount: (() => {
+                    const debt = receipt.less.find(l => l.description === 'Debt Deduction')?.amount || 0;
+                    return debt > 0 ? formatNumber(debt) : null;
+                })(),
                 creditAmount: formatCurrency(totalCredit),
                 debitAmount: formatCurrency(receipt.debitTotal || 0),
                 balanceAmount: formatCurrency(receipt.balance || 0)
@@ -367,7 +370,10 @@ const getReceiptPdf = async (req, res) => {
                 vehicleNo: receipt.vehicle || '',
                 items: items,
                 offloadingAmount: formatNumber(receipt.less.find(l => l.description === 'Offloading')?.amount || 0),
-                debtAmount: formatNumber(receipt.less.find(l => l.description === 'Debt Deduction')?.amount || 0),
+                debtAmount: (() => {
+                    const debt = receipt.less.find(l => l.description === 'Debt Deduction')?.amount || 0;
+                    return debt > 0 ? formatNumber(debt) : null;
+                })(),
                 profits: profits,
                 totalProfit: formatCurrency(totalProfit),
                 creditAmount: formatCurrency(totalCredit),
