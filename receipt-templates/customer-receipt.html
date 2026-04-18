@@ -80,13 +80,27 @@
             font-weight: bold;
             color: #1f2937;
         }
+                /* FIXED CONTACT INFO STYLES - everything starts at left edge */
         .contact-info {
-            font-size: 9px;
+            text-align: left;
             margin-top: 8px;
             line-height: 1.3;
         }
-        .contact-info p { margin: 2px 0; }
-        .contact-info .label { color: #dc2626; font-weight: bold; }
+        .contact-item {
+            margin-bottom: 8px;
+        }
+        .contact-label {
+            color: #dc2626;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 2px;
+            font-size: 9px;
+        }
+        .contact-detail {
+            display: block;
+            font-size: 9px;
+            color: #1f2937;
+        }
         .date-boxes {
             display: flex;
             justify-content: flex-end;
@@ -245,9 +259,18 @@
             <div class="title-section">
                 <h2 class="main-title">PURCHASE VOUCHER</h2>
                 <div class="contact-info">
-                    <p><span class="label">Office Address:</span><br>Line11, Shop 1, Owode Onirin, Ikorodu road, Lagos.</p>
-                    <p><span class="label">Telephone:</span><br>08033281397, 08052944592, 08062514308</p>
-                    <p><span class="label">E-mail:</span><br>ganiolaiya123@gmail.com</p>
+                    <div class="contact-item">
+                        <div class="contact-label">Office Address:</div>
+                        <div class="contact-detail">Line11, Shop 1, Owode Onirin, Ikorodu road, Lagos.</div>
+                    </div>
+                    <div class="contact-item">
+                        <div class="contact-label">Telephone:</div>
+                        <div class="contact-detail">08033281397, 08052944592, 08062514308</div>
+                    </div>
+                    <div class="contact-item">
+                        <div class="contact-label">E-mail:</div>
+                        <div class="contact-detail">ganiolaiya123@gmail.com</div>
+                    </div>
                 </div>
                 <div class="date-boxes">
                     <div class="date-item"><span class="date-label">DD</span><span class="date-value">{{day}}</span></div>
