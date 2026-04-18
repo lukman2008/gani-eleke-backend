@@ -5,55 +5,205 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>Gani Eleke Receipt</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 20px; background: #f3f4f6; }
-        .receipt-container { max-width: 800px; margin: 0 auto; background: white; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); padding: 30px; position: relative; overflow: hidden; border: 1px solid #e5e7eb; }
-        .header-bar { display: flex; height: 8px; margin-bottom: 24px; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background: #f3f4f6;
+        }
+        .receipt-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+            padding: 30px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #e5e7eb;
+        }
+        .header-bar {
+            display: flex;
+            height: 8px;
+            margin-bottom: 24px;
+        }
         .bar-red { width: 50%; background-color: #dc2626; }
         .bar-blue { width: 66.666%; background-color: #1e3a8a; }
-        .logo-section { width: 45%; }
-        .logo-wrapper { display: flex; align-items: center; gap: 12px; }
-        .logo-img { width: 64px; height: 64px; border-radius: 50%; overflow: hidden; background: #e5e7eb; }
-        .logo-img img { width: 100%; height: 100%; object-fit: cover; }
-        .company-name { font-size: 28px; font-weight: 800; color: #1e3a8a; line-height: 1; }
-        .company-tag { font-size: 18px; letter-spacing: 0.2em; color: #6b7280; font-weight: 300; }
-        .dealer-text { font-size: 10px; color: #dc2626; font-weight: bold; margin-top: 8px; line-height: 1.3; }
+        .logo-section { width: 50%; }
+        .logo-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .logo-img {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: #e5e7eb;
+        }
+        .logo-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .company-name {
+            font-size: 28px;
+            font-weight: 800;
+            color: #1e3a8a;
+            line-height: 1;
+        }
+        .company-tag {
+            font-size: 18px;
+            letter-spacing: 0.2em;
+            color: #6b7280;
+            font-weight: 300;
+        }
+        .dealer-text {
+            font-size: 10px;
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 8px;
+            line-height: 1.3;
+        }
         .dealer-text span { color: black; }
-        .title-section { text-align: right; width: 55%; }
-        .main-title { font-size: 28px; font-weight: bold; color: #1f2937; }
-        .contact-info { font-size: 9px; margin-top: 8px; line-height: 1.3; }
+        .title-section {
+            text-align: right;
+        }
+        .main-title {
+            font-size: 30px;
+            font-weight: bold;
+            color: #1f2937;
+        }
+        .contact-info {
+            font-size: 10px;
+            margin-top: 8px;
+            line-height: 1.4;
+        }
         .contact-info p { margin: 2px 0; }
         .contact-info .label { color: #dc2626; font-weight: bold; }
-        .date-boxes { display: flex; justify-content: flex-end; gap: 4px; margin-top: 8px; }
-        .date-item { display: flex; align-items: center; border: 1px solid #1e3a8a; }
-        .date-label { background: #1e3a8a; color: white; font-size: 10px; padding: 4px 8px; }
-        .date-value { width: 32px; text-align: center; font-size: 14px; padding: 0 4px; }
-        .company-row { margin-bottom: 16px; padding: 8px; background: #f3f4f6; border-radius: 8px; }
+        .date-boxes {
+            display: flex;
+            justify-content: flex-end;
+            gap: 4px;
+            margin-top: 8px;
+        }
+        .date-item {
+            display: flex;
+            align-items: center;
+            border: 1px solid #1e3a8a;
+        }
+        .date-label {
+            background: #1e3a8a;
+            color: white;
+            font-size: 10px;
+            padding: 4px 8px;
+        }
+        .date-value {
+            width: 32px;
+            text-align: center;
+            font-size: 14px;
+            padding: 0 4px;
+        }
+        .company-row {
+            margin-bottom: 16px;
+            padding: 8px;
+            background: #f3f4f6;
+            border-radius: 8px;
+        }
         .company-row p { font-size: 14px; font-weight: bold; }
-        .company-row span { font-size: 16px; }
-        .customer-info { margin-bottom: 24px; }
-        .info-row { display: flex; border: 1px solid #1e3a8a; margin-bottom: 8px; }
-        .info-label { background: #1e3a8a; color: white; padding: 6px 12px; font-weight: bold; width: 96px; font-size: 13px; }
-        .info-value { flex: 1; padding: 6px 8px; font-size: 13px; }
-        .info-row-group { display: flex; gap: 16px; }
-        .info-half { display: flex; border: 1px solid #1e3a8a; flex: 1; }
-        .info-half .info-label { width: 70px; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
-        th { background: #1e3a8a; color: white; font-size: 12px; padding: 10px 8px; text-align: left; }
+        .company-row span { font-size: 18px; }
+        .customer-info {
+            margin-bottom: 24px;
+        }
+        .info-row {
+            display: flex;
+            border: 1px solid #1e3a8a;
+        }
+        .info-label {
+            background: #1e3a8a;
+            color: white;
+            padding: 4px 12px;
+            font-weight: bold;
+            width: 96px;
+            font-size: 14px;
+        }
+        .info-value {
+            flex: 1;
+            padding: 4px 8px;
+            font-size: 14px;
+        }
+        .info-row-group {
+            display: flex;
+            gap: 16px;
+            margin-top: 8px;
+        }
+        .info-half {
+            display: flex;
+            border: 1px solid #1e3a8a;
+            flex: 1;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 24px;
+        }
+        th {
+            background: #1e3a8a;
+            color: white;
+            font-size: 12px;
+            padding: 8px;
+            text-align: left;
+        }
         th.text-center, td.text-center { text-align: center; }
         th.text-right, td.text-right { text-align: right; }
-        td { padding: 8px; border-bottom: 1px solid #e5e7eb; font-size: 12px; }
+        td {
+            padding: 8px;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 12px;
+        }
         .bg-gray-100 { background-color: #f3f4f6; }
         .bg-white { background-color: white; }
-        .totals-section { display: flex; justify-content: flex-end; margin-top: 16px; }
-        .totals-box { width: 280px; text-align: right; }
-        .total-row { display: flex; justify-content: space-between; padding: 6px 0; }
-        .bold { font-weight: bold; }
-        .balance-row { display: flex; justify-content: space-between; padding: 10px 0; margin-top: 8px; border-top: 2px solid #1e3a8a; }
+        .totals-section {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 16px;
+        }
+        .totals-box {
+            width: 288px;
+            text-align: right;
+        }
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+        }
+        .balance-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            margin-top: 8px;
+            border-top: 2px solid #1e3a8a;
+        }
         .balance-label { font-weight: bold; font-size: 18px; }
         .balance-value { font-weight: bold; font-size: 18px; color: #1e3a8a; }
-        .footer { margin-top: 32px; padding-top: 16px; text-align: center; border-top: 1px solid #e5e7eb; }
-        .watermark { position: absolute; bottom: -90px; right: -90px; opacity: 0.05; pointer-events: none; }
+        .footer {
+            margin-top: 32px;
+            padding-top: 16px;
+            text-align: center;
+            border-top: 1px solid #e5e7eb;
+        }
+        .watermark {
+            position: absolute;
+            bottom: -90px;
+            right: -90px;
+            opacity: 0.05;
+            pointer-events: none;
+        }
         .watermark img { width: 500px; height: 500px; object-fit: contain; }
         @media (max-width: 768px) {
             .receipt-container { padding: 15px; }
@@ -66,12 +216,14 @@
 </head>
 <body>
     <div class="receipt-container">
+        <!-- Header Bar -->
         <div class="header-bar">
             <div class="bar-red"></div>
             <div class="bar-blue"></div>
         </div>
         
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+        <!-- Logo and Title -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px;">
             <div class="logo-section">
                 <div class="logo-wrapper">
                     <div class="logo-img">
@@ -82,6 +234,10 @@
                         <h1 class="company-name">GANI ELEKE</h1>
                         <p class="company-tag">ENTERPRISES</p>
                     </div>
+                </div>
+                <div class="dealer-text">
+                    Dealers and Suppliers of all kind of:<br>
+                    <span>Electric Motor, Pumping Machine,<br>Gear Motor and scrap etc.</span>
                 </div>
             </div>
 
@@ -100,47 +256,50 @@
             </div>
         </div>
 
+        <!-- Company Name (Dynamic) -->
         <div class="company-row">
             <p>Company: <span>{{companyName}}</span></p>
         </div>
 
+        <!-- Customer Info -->
         <div class="customer-info">
             <div class="info-row">
                 <span class="info-label">TO</span>
                 <div class="info-value">{{customerName}}</div>
             </div>
-            <div class="info-row">
+            <div class="info-row" style="margin-top: 8px;">
                 <span class="info-label">ADDRESS</span>
                 <div class="info-value">{{customerAddress}}</div>
             </div>
             <div class="info-row-group">
                 <div class="info-half">
-                    <span class="info-label">TEL:</span>
+                    <span class="info-label" style="width: 60px;">TEL:</span>
                     <div class="info-value">{{customerPhone}}</div>
                 </div>
                 <div class="info-half">
-                    <span class="info-label">VEHICLE NO.</span>
+                    <span class="info-label" style="width: 80px;">Vehicle</span>
                     <div class="info-value">{{vehicleNo}}</div>
                 </div>
             </div>
         </div>
 
+        <!-- Items Table -->
         <table>
             <thead>
                 <tr>
-                    <th>ITEMS DETAILS</th>
-                    <th class="text-center">DUST</th>
+                    <th>Item Description</th>
+                    <th class="text-center">Dust (KG)</th>
                     <th class="text-center">QTY</th>
-                    <th class="text-center">RATE</th>
-                    <th class="text-right">AMOUNT #</th>
+                    <th class="text-center">Rate (₦)</th>
+                    <th class="text-right">Amount (₦)</th>
                 </tr>
             </thead>
             <tbody>
                 {{#each items}}
                 <tr class="{{#if odd}}bg-gray-100{{else}}bg-white{{/if}}">
                     <td>{{description}}</td>
-                    <td class="text-center">{{dust}}KG</td>
-                    <td class="text-center">{{qty}}</td>
+                    <td class="text-center">{{dust}}</td>
+                    <td class="text-center">{{effectiveQty}}</td>
                     <td class="text-center">{{rate}}</td>
                     <td class="text-right">{{amount}}</td>
                 </tr>
@@ -148,8 +307,11 @@
             </tbody>
         </table>
 
+        <!-- Charges Table -->
         <table>
-            <thead><tr><th>Descriptions</th><th class="text-right">Amount #</th></tr></thead>
+            <thead>
+                <tr><th>Description</th><th class="text-right">Amount (₦)</th></tr>
+            </thead>
             <tbody>
                 <tr class="bg-white"><td>Offloading</td><td class="text-right">{{offloadingAmount}}</td></tr>
                 {{#if debtAmount}}
@@ -158,18 +320,21 @@
             </tbody>
         </table>
 
+        <!-- Totals -->
         <div class="totals-section">
             <div class="totals-box">
-                <div class="total-row"><span class="bold">Credit:</span><span>{{creditAmount}}</span></div>
-                <div class="total-row"><span class="bold">Debit:</span><span>{{debitAmount}}</span></div>
-                <div class="balance-row"><span class="balance-label">Balance:</span><span class="balance-value">{{balanceAmount}}</span></div>
+                <div class="total-row"><span class="bold">Credit Total:</span><span>{{creditAmount}}</span></div>
+                <div class="total-row"><span class="bold">Debit Total:</span><span>{{debitAmount}}</span></div>
+                <div class="balance-row"><span class="balance-label">BALANCE:</span><span class="balance-value">{{balanceAmount}}</span></div>
             </div>
         </div>
 
+        <!-- Footer -->
         <div class="footer">
-            <p style="font-style: italic; color: #4b5563;">Thank you for doing business with us.</p>
+            <p style="font-style: italic; color: #4b5563; font-size: 14px;">Thank you for doing business with us.</p>
         </div>
 
+        <!-- Watermark -->
         <div class="watermark">
             <img src="{{logoUrl}}" alt="Watermark" onerror="this.style.display='none'">
         </div>
