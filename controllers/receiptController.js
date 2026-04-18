@@ -17,7 +17,7 @@ const formatNumber = (num) => num.toLocaleString('en-US');
 
 const getLogoUrl = () => 'https://gani-eleke-project.vercel.app/frontend/img/logo.jpeg';
 
-// Your HTMLCSSTOIMAGE API credentials
+// HTMLCSSTOIMAGE API credentials
 const HCTI_USER_ID = '01KPBNPMNFC057VW7R1Q2ERBCE';
 const HCTI_API_KEY = '019d975b-52af-730a-ad51-dbd52470e6ee';
 
@@ -77,6 +77,7 @@ const generateImageResponse = async (html, filename, res) => {
         
     } catch (error) {
         console.error('API Error:', error.message);
+        // Fallback: send HTML
         res.setHeader('Content-Type', 'text/html');
         res.setHeader('Content-Disposition', `attachment; filename="${filename}.html"`);
         res.send(html);
@@ -84,7 +85,7 @@ const generateImageResponse = async (html, filename, res) => {
 };
 
 /* =========================
-   COMPUTE RECEIPT
+   COMPUTE RECEIPT - CORRECTED CALCULATIONS
 ========================= */
 
 const computeReceipt = ({ customerName, credits = [], less = [], note }) => {
@@ -94,10 +95,11 @@ const computeReceipt = ({ customerName, credits = [], less = [], note }) => {
     const dust = Number(item.dust || 0);
     const initialRate = Number(item.initialRate) || rate;
     
+    // CORRECTED: Both I-AMOUNT and F-AMOUNT use effective quantity (QTY - DUST)
     const effectiveQty = Math.max(0, qty - dust);
-    const iAmount = qty * initialRate;
-    const fAmount = effectiveQty * rate;
-    const profit = fAmount - iAmount;
+    const iAmount = effectiveQty * initialRate;  // I-AMOUNT = (QTY - DUST) × I-RATE
+    const fAmount = effectiveQty * rate;         // F-AMOUNT = (QTY - DUST) × F-RATE
+    const profit = fAmount - iAmount;            // Profit = F-AMOUNT - I-AMOUNT
 
     return {
       description: item.description || '',
@@ -113,13 +115,11 @@ const computeReceipt = ({ customerName, credits = [], less = [], note }) => {
     };
   });
 
-  // Filter out Debt Deduction from less array - DO NOT INCLUDE IN RECEIPT
-  const normalizedLess = less
-    .filter((item) => item.description !== 'Debt Deduction')
-    .map((item) => ({
-      description: item.description || '',
-      amount: Number(item.amount || 0),
-    }));
+  // Keep Offloading and Debt for calculation, but Debt will NOT be shown in receipt
+  const normalizedLess = less.map((item) => ({
+    description: item.description || '',
+    amount: Number(item.amount || 0),
+  }));
 
   const totalCredit = normalizedCredits.reduce((sum, i) => sum + i.fAmount, 0);
   const totalDebit = normalizedLess.reduce((sum, i) => sum + i.amount, 0);
@@ -234,7 +234,7 @@ const deleteReceipt = async (req, res) => {
 };
 
 /* =========================
-   GET RECEIPT SUMMARY - AGENT REVENUE ONLY
+   GET RECEIPT SUMMARY - CORRECTED AGENT REVENUE
 ========================= */
 
 const getReceiptSummary = async (req, res) => {
@@ -244,8 +244,7 @@ const getReceiptSummary = async (req, res) => {
   const totalDebitAmount = receipts.reduce((sum, receipt) => sum + (receipt.debitTotal || 0), 0);
   const totalBalance = receipts.reduce((sum, receipt) => sum + (receipt.balance || 0), 0);
   
-  // Calculate Agent Revenue (Total Profit from all receipts)
-  // Profit = F-Amount - I-Amount (Selling Value - Buying Cost)
+  // Calculate Agent Revenue = Sum of all Profits (F-AMOUNT - I-AMOUNT)
   let totalAgentRevenue = 0;
   for (const receipt of receipts) {
     for (const item of receipt.credits) {
@@ -253,6 +252,8 @@ const getReceiptSummary = async (req, res) => {
       totalAgentRevenue += profit > 0 ? profit : 0;
     }
   }
+  
+  console.log('Total Agent Revenue Calculated:', totalAgentRevenue);
   
   res.json({
     totalReceipts,
@@ -273,7 +274,7 @@ const clearReceipts = async (req, res) => {
 };
 
 /* =========================
-   GET RECEIPT IMAGE (PNG)
+   GET RECEIPT IMAGE (PNG) - CORRECTED CALCULATIONS
 ========================= */
 
 const getReceiptPdf = async (req, res) => {
@@ -287,10 +288,15 @@ const getReceiptPdf = async (req, res) => {
         const month = (date.getMonth() + 1).toString().padStart(2, '0');
         const year = date.getFullYear().toString().slice(-2);
         const logoUrl = getLogoUrl();
-        
         const companyName = receipt.companyName || '';
 
+        // Get offloading amount and debt amount (debt used for calculation but NOT shown)
+        const offloadingAmount = receipt.less.find(l => l.description === 'Offloading')?.amount || 0;
+        const debtAmount = receipt.less.find(l => l.description === 'Debt Deduction')?.amount || 0;
+        const totalDebit = (receipt.debitTotal || 0);
+
         if (type === 'customer') {
+            // CUSTOMER RECEIPT: Amount = (QTY - DUST) × RATE
             let totalCredit = 0;
             const items = receipt.credits.map((item, index) => {
                 const originalQty = item.qty || 0;
@@ -309,6 +315,9 @@ const getReceiptPdf = async (req, res) => {
                 };
             });
 
+            // Balance = Total Credit - Offloading - Debt (Debt deducted but NOT shown)
+            const finalBalance = Math.max(0, totalCredit - totalDebit);
+
             const html = compiledCustomerTemplate({
                 logoUrl, day, month, year,
                 companyName: companyName,
@@ -317,14 +326,15 @@ const getReceiptPdf = async (req, res) => {
                 customerPhone: receipt.customerPhone || '',
                 vehicleNo: receipt.vehicle || '',
                 items: items,
-                offloadingAmount: formatNumber(receipt.less.find(l => l.description === 'Offloading')?.amount || 0),
+                offloadingAmount: formatNumber(offloadingAmount),
                 creditAmount: formatCurrency(totalCredit),
-                debitAmount: formatCurrency(receipt.debitTotal || 0),
-                balanceAmount: formatCurrency(Math.max(0, totalCredit - (receipt.debitTotal || 0)))
+                debitAmount: formatCurrency(totalDebit),
+                balanceAmount: formatCurrency(finalBalance)
             });
 
             return await generateImageResponse(html, `customer-receipt-${receipt.receiptNumber}`, res);
         } else {
+            // COMPANY RECEIPT: CORRECTED - Both I-AMOUNT and F-AMOUNT use (QTY - DUST)
             let totalCredit = 0;
             let totalProfit = 0;
             const profits = [];
@@ -335,19 +345,19 @@ const getReceiptPdf = async (req, res) => {
                 const rate = item.rate || 0;
                 const initialRate = item.initialRate || rate;
                 const effectiveQty = Math.max(0, originalQty - dust);
-                const iAmount = originalQty * initialRate;
+                // CORRECTED: Both use effectiveQty
+                const iAmount = effectiveQty * initialRate;
                 const fAmount = effectiveQty * rate;
                 const profit = fAmount - iAmount;
                 totalCredit += fAmount;
-                totalProfit += profit > 0 ? profit : 0;
-                if (profit !== 0) {
+                if (profit > 0) {
+                    totalProfit += profit;
                     profits.push({ name: item.description || '', amount: formatCurrency(profit) });
                 }
                 return {
                     description: item.description || '',
                     dust: dust,
                     qty: originalQty,
-                    effectiveQty: effectiveQty,
                     iRate: initialRate,
                     fRate: rate,
                     iAmount: formatNumber(iAmount),
@@ -355,6 +365,9 @@ const getReceiptPdf = async (req, res) => {
                     odd: index % 2 === 1
                 };
             });
+
+            // Balance = Total Credit - Offloading - Debt (Debt deducted but NOT shown)
+            const finalBalance = Math.max(0, totalCredit - totalDebit);
 
             const html = compiledCompanyTemplate({
                 logoUrl, day, month, year,
@@ -364,12 +377,12 @@ const getReceiptPdf = async (req, res) => {
                 customerPhone: receipt.customerPhone || '',
                 vehicleNo: receipt.vehicle || '',
                 items: items,
-                offloadingAmount: formatNumber(receipt.less.find(l => l.description === 'Offloading')?.amount || 0),
+                offloadingAmount: formatNumber(offloadingAmount),
                 profits: profits,
                 totalProfit: formatCurrency(totalProfit),
                 creditAmount: formatCurrency(totalCredit),
-                debitAmount: formatCurrency(receipt.debitTotal || 0),
-                balanceAmount: formatCurrency(Math.max(0, totalCredit - (receipt.debitTotal || 0)))
+                debitAmount: formatCurrency(totalDebit),
+                balanceAmount: formatCurrency(finalBalance)
             });
 
             return await generateImageResponse(html, `company-receipt-${receipt.receiptNumber}`, res);
