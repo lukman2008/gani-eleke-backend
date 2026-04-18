@@ -33,7 +33,7 @@
         }
         .bar-red { width: 50%; background-color: #dc2626; }
         .bar-blue { width: 66.666%; background-color: #1e3a8a; }
-        .logo-section { width: 50%; }
+        .logo-section { width: 45%; }
         .logo-wrapper {
             display: flex;
             align-items: center;
@@ -73,16 +73,17 @@
         .dealer-text span { color: black; }
         .title-section {
             text-align: right;
+            width: 55%;
         }
         .main-title {
-            font-size: 30px;
+            font-size: 28px;
             font-weight: bold;
             color: #1f2937;
         }
         .contact-info {
-            font-size: 10px;
+            font-size: 9px;
             margin-top: 8px;
-            line-height: 1.4;
+            line-height: 1.3;
         }
         .contact-info p { margin: 2px 0; }
         .contact-info .label { color: #dc2626; font-weight: bold; }
@@ -116,37 +117,38 @@
             border-radius: 8px;
         }
         .company-row p { font-size: 14px; font-weight: bold; }
-        .company-row span { font-size: 18px; }
+        .company-row span { font-size: 16px; }
         .customer-info {
             margin-bottom: 24px;
         }
         .info-row {
             display: flex;
             border: 1px solid #1e3a8a;
+            margin-bottom: 8px;
         }
         .info-label {
             background: #1e3a8a;
             color: white;
-            padding: 4px 12px;
+            padding: 6px 12px;
             font-weight: bold;
             width: 96px;
-            font-size: 14px;
+            font-size: 13px;
         }
         .info-value {
             flex: 1;
-            padding: 4px 8px;
-            font-size: 14px;
+            padding: 6px 8px;
+            font-size: 13px;
         }
         .info-row-group {
             display: flex;
             gap: 16px;
-            margin-top: 8px;
         }
         .info-half {
             display: flex;
             border: 1px solid #1e3a8a;
             flex: 1;
         }
+        .info-half .info-label { width: 70px; }
         table {
             width: 100%;
             border-collapse: collapse;
@@ -156,7 +158,7 @@
             background: #1e3a8a;
             color: white;
             font-size: 12px;
-            padding: 8px;
+            padding: 10px 8px;
             text-align: left;
         }
         th.text-center, td.text-center { text-align: center; }
@@ -174,18 +176,19 @@
             margin-top: 16px;
         }
         .totals-box {
-            width: 288px;
+            width: 280px;
             text-align: right;
         }
         .total-row {
             display: flex;
             justify-content: space-between;
-            padding: 4px 0;
+            padding: 6px 0;
         }
+        .bold { font-weight: bold; }
         .balance-row {
             display: flex;
             justify-content: space-between;
-            padding: 8px 0;
+            padding: 10px 0;
             margin-top: 8px;
             border-top: 2px solid #1e3a8a;
         }
@@ -216,14 +219,12 @@
 </head>
 <body>
     <div class="receipt-container">
-        <!-- Header Bar -->
         <div class="header-bar">
             <div class="bar-red"></div>
             <div class="bar-blue"></div>
         </div>
         
-        <!-- Logo and Title -->
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
             <div class="logo-section">
                 <div class="logo-wrapper">
                     <div class="logo-img">
@@ -256,50 +257,47 @@
             </div>
         </div>
 
-        <!-- Company Name (Dynamic) -->
         <div class="company-row">
             <p>Company: <span>{{companyName}}</span></p>
         </div>
 
-        <!-- Customer Info -->
         <div class="customer-info">
             <div class="info-row">
                 <span class="info-label">TO</span>
                 <div class="info-value">{{customerName}}</div>
             </div>
-            <div class="info-row" style="margin-top: 8px;">
+            <div class="info-row">
                 <span class="info-label">ADDRESS</span>
                 <div class="info-value">{{customerAddress}}</div>
             </div>
             <div class="info-row-group">
                 <div class="info-half">
-                    <span class="info-label" style="width: 60px;">TEL:</span>
+                    <span class="info-label">TEL:</span>
                     <div class="info-value">{{customerPhone}}</div>
                 </div>
                 <div class="info-half">
-                    <span class="info-label" style="width: 80px;">Vehicle</span>
+                    <span class="info-label">VEHICLE NO.</span>
                     <div class="info-value">{{vehicleNo}}</div>
                 </div>
             </div>
         </div>
 
-        <!-- Items Table -->
         <table>
             <thead>
                 <tr>
-                    <th>Item Description</th>
-                    <th class="text-center">Dust (KG)</th>
+                    <th>ITEMS DETAILS</th>
+                    <th class="text-center">DUST</th>
                     <th class="text-center">QTY</th>
-                    <th class="text-center">Rate (₦)</th>
-                    <th class="text-right">Amount (₦)</th>
+                    <th class="text-center">RATE</th>
+                    <th class="text-right">AMOUNT #</th>
                 </tr>
             </thead>
             <tbody>
                 {{#each items}}
                 <tr class="{{#if odd}}bg-gray-100{{else}}bg-white{{/if}}">
                     <td>{{description}}</td>
-                    <td class="text-center">{{dust}}</td>
-                    <td class="text-center">{{effectiveQty}}</td>
+                    <td class="text-center">{{dust}}KG</td>
+                    <td class="text-center">{{qty}}</td>
                     <td class="text-center">{{rate}}</td>
                     <td class="text-right">{{amount}}</td>
                 </tr>
@@ -307,34 +305,38 @@
             </tbody>
         </table>
 
-        <!-- Charges Table -->
-        <table>
+        <!-- Charges Table - Debt row stays but amount is blank -->
+        <table class="w-full text-left mb-6 border-collapse">
             <thead>
-                <tr><th>Description</th><th class="text-right">Amount (₦)</th></tr>
+                <tr class="bg-blue-900 text-white">
+                    <th class="py-2 px-2">Descriptions</th>
+                    <th class="py-2 px-2 text-right">Amount #</th>
+                </tr>
             </thead>
             <tbody>
-                <tr class="bg-white"><td>Offloading</td><td class="text-right">{{offloadingAmount}}</td></tr>
-                {{#if debtAmount}}
-                <tr class="bg-gray-100"><td>Debt</td><td class="text-right">{{debtAmount}}</td></tr>
-                {{/if}}
+                <tr class="bg-white">
+                    <td class="py-2 px-2 border-b">Offloading</td>
+                    <td class="py-2 px-2 text-right border-b">{{offloadingAmount}}</td>
+                </tr>
+                <tr class="bg-gray-100">
+                    <td class="py-2 px-2 border-b">Debt</td>
+                    <td class="py-2 px-2 text-right border-b"></td>
+                </tr>
             </tbody>
         </table>
 
-        <!-- Totals -->
         <div class="totals-section">
             <div class="totals-box">
-                <div class="total-row"><span class="bold">Credit Total:</span><span>{{creditAmount}}</span></div>
-                <div class="total-row"><span class="bold">Debit Total:</span><span>{{debitAmount}}</span></div>
-                <div class="balance-row"><span class="balance-label">BALANCE:</span><span class="balance-value">{{balanceAmount}}</span></div>
+                <div class="total-row"><span class="bold">Credit:</span><span>{{creditAmount}}</span></div>
+                <div class="total-row"><span class="bold">Debit:</span><span>{{debitAmount}}</span></div>
+                <div class="balance-row"><span class="balance-label">Balance:</span><span class="balance-value">{{balanceAmount}}</span></div>
             </div>
         </div>
 
-        <!-- Footer -->
         <div class="footer">
-            <p style="font-style: italic; color: #4b5563; font-size: 14px;">Thank you for doing business with us.</p>
+            <p style="font-style: italic; color: #4b5563;">Thank you for doing business with us.</p>
         </div>
 
-        <!-- Watermark -->
         <div class="watermark">
             <img src="{{logoUrl}}" alt="Watermark" onerror="this.style.display='none'">
         </div>
