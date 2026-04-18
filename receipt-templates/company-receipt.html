@@ -80,7 +80,7 @@
             align-items: flex-end;
         }
         .main-title {
-            font-size: 28px;
+            font-size: 26px;
             font-weight: bold;
             color: #1f2937;
             text-align: right;
@@ -88,8 +88,8 @@
         }
         /* Contact block directly under title, left-aligned inside right column - FIXED POSITION */
         .contact-info {
-            text-align: left;
-            width: 100%;
+            align-self: flex-end;
+            width: auto;
             background: transparent;
             margin-bottom: 12px;
             line-height: 1.3;
@@ -360,7 +360,7 @@
             </thead>
             <tbody>
                 {{#each items}}
-                <tr class="{{#if odd}}bg-gray-100{{else}}bg-white{{/if}}">
+                <tr class="{{#if odd}}bg-gray-700{{else}}bg-white{{/if}}">
                     <td>{{description}}</td>
                     <td class="text-center">{{dust}}KG</td>
                     <td class="text-center">{{qty}}</td>
