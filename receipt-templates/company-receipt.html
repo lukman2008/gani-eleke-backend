@@ -72,12 +72,12 @@
         }
         .dealer-text span { color: black; }
         
-        /* RIGHT SECTION (title + contact + date) - PERFECT ALIGNMENT */
+        /* RIGHT SECTION (title + contact + date) - PERFECT ALIGNMENT, NO MIDDLE SHIFT */
         .title-section {
             width: 55%;
             display: flex;
             flex-direction: column;
-            align-items: flex-end;   /* keep everything right-aligned as original */
+            align-items: flex-end;
         }
         .main-title {
             font-size: 28px;
@@ -86,10 +86,10 @@
             text-align: right;
             margin-bottom: 12px;
         }
-        /* Contact block now directly under title, left-aligned inside right column */
+        /* Contact block directly under title, left-aligned inside right column - FIXED POSITION */
         .contact-info {
             text-align: left;
-            width: 100%;           /* takes full width of right column */
+            width: 100%;
             background: transparent;
             margin-bottom: 12px;
             line-height: 1.3;
@@ -109,7 +109,7 @@
             font-size: 9px;
             color: #1f2937;
         }
-        /* date boxes stays right aligned but flows naturally under contact */
+        /* date boxes stay right aligned under contact */
         .date-boxes {
             display: flex;
             justify-content: flex-end;
@@ -271,7 +271,7 @@
             <div class="bar-blue"></div>
         </div>
         
-        <!-- TOP AREA: Logo left, Right side: COMPANY COPY + contact info + date boxes (all stacked vertically) -->
+        <!-- TOP AREA: Logo left, Right side: COMPANY COPY + contact info + date boxes (all stacked vertically, contact info directly under title - NO MIDDLE SHIFT) -->
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
             <!-- Left: Logo & company details (unchanged) -->
             <div class="logo-section">
@@ -291,10 +291,10 @@
                 </div>
             </div>
 
-            <!-- RIGHT SECTION: "COMPANY COPY" then contact details block, then date boxes (no middle float) -->
+            <!-- RIGHT SECTION: "COMPANY COPY" then contact details block directly under it, then date boxes (contact info is properly placed, not in the middle) -->
             <div class="title-section">
                 <h2 class="main-title">COMPANY COPY</h2>
-                <!-- Contact info now directly under title (left-aligned inside right container) -->
+                <!-- Contact info: directly under title - this is the correct position, not floating in the middle -->
                 <div class="contact-info">
                     <div class="contact-item">
                         <div class="contact-label">Office Address:</div>
@@ -309,7 +309,7 @@
                         <div class="contact-detail">ganiolaiya123@gmail.com</div>
                     </div>
                 </div>
-                <!-- Date boxes stay under contact, still right-aligned -->
+                <!-- Date boxes stay under contact, right-aligned -->
                 <div class="date-boxes">
                     <div class="date-item"><span class="date-label">DD</span><span class="date-value">{{day}}</span></div>
                     <div class="date-item"><span class="date-label">MM</span><span class="date-value">{{month}}</span></div>
