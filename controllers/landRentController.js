@@ -66,7 +66,7 @@ const deleteLandRent = async (req, res) => {
   res.json({ message: 'Land rental deleted.' });
 };
 
-// Get land rent summary - ONLY COUNT PAID RENTALS
+// Get land rent summary - LAND REVENUE ONLY (from paid rentals)
 const getLandRentSummary = async (req, res) => {
   const landRents = await LandRent.find();
   
@@ -84,22 +84,14 @@ const getLandRentSummary = async (req, res) => {
   
   // Only count PAID rentals for revenue
   const paidRentals = landRents.filter(r => r.status === 'paid');
-  const totalRevenue = paidRentals.reduce((sum, r) => sum + (r.amount || 0), 0);
+  const totalLandRevenue = paidRentals.reduce((sum, r) => sum + (r.amount || 0), 0);
   
   const weeklyPaidRentals = landRents.filter(r => r.status === 'paid' && new Date(r.createdAt) >= startOfWeek && new Date(r.createdAt) <= endOfWeek);
-  const weeklyRevenue = weeklyPaidRentals.reduce((sum, r) => sum + (r.amount || 0), 0);
+  const weeklyLandRevenue = weeklyPaidRentals.reduce((sum, r) => sum + (r.amount || 0), 0);
   
-  // Agent revenue = same as total revenue (from paid rentals)
-  const agentRevenue = totalRevenue;
-  const agentWeeklyRevenue = weeklyRevenue;
-  const totalAgentRevenue = totalRevenue;
-
   res.json({
-    totalRevenue,
-    weeklyRevenue,
-    agentRevenue,
-    agentWeeklyRevenue,
-    totalAgentRevenue,
+    totalRevenue: totalLandRevenue,
+    weeklyRevenue: weeklyLandRevenue
   });
 };
 
@@ -108,4 +100,12 @@ const clearLandRents = async (req, res) => {
   res.json({ message: 'All land rentals have been cleared.' });
 };
 
-module.exports = { createLandRent, getLandRents, getLandRentById, updateLandRent, deleteLandRent, getLandRentSummary, clearLandRents };
+module.exports = { 
+  createLandRent, 
+  getLandRents, 
+  getLandRentById, 
+  updateLandRent, 
+  deleteLandRent, 
+  getLandRentSummary, 
+  clearLandRents 
+};

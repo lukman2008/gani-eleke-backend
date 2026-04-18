@@ -234,7 +234,7 @@ const deleteReceipt = async (req, res) => {
 };
 
 /* =========================
-   GET RECEIPT SUMMARY
+   GET RECEIPT SUMMARY - AGENT REVENUE ONLY
 ========================= */
 
 const getReceiptSummary = async (req, res) => {
@@ -244,6 +244,8 @@ const getReceiptSummary = async (req, res) => {
   const totalDebitAmount = receipts.reduce((sum, receipt) => sum + (receipt.debitTotal || 0), 0);
   const totalBalance = receipts.reduce((sum, receipt) => sum + (receipt.balance || 0), 0);
   
+  // Calculate Agent Revenue (Total Profit from all receipts)
+  // Profit = F-Amount - I-Amount (Selling Value - Buying Cost)
   let totalAgentRevenue = 0;
   for (const receipt of receipts) {
     for (const item of receipt.credits) {
