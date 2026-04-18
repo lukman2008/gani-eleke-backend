@@ -296,93 +296,103 @@ const getReceiptPdf = async (req, res) => {
         
         const companyName = receipt.companyName || '';
 
-        if (type === 'customer') {
-            let totalCredit = 0;
-            const items = receipt.credits.map((item, index) => {
-                const effectiveQty = Math.max(0, (item.qty || 0) - (item.dust || 0));
-                const amount = effectiveQty * (item.rate || 0);
-                totalCredit += amount;
-                return {
-                    description: item.description || '',
-                    dust: item.dust || 0,
-                    qty: item.qty || 0,
-                    effectiveQty: effectiveQty,
-                    rate: item.rate || 0,
-                    amount: formatNumber(amount),
-                    odd: index % 2 === 1
-                };
-            });
+        // For CUSTOMER receipt - CHANGE THIS SECTION:
+if (type === 'customer') {
+    let totalCredit = 0;
+    const items = receipt.credits.map((item, index) => {
+        // IMPORTANT: Use original QTY, not effectiveQty for display
+        const originalQty = item.qty || 0;
+        const dust = item.dust || 0;
+        const rate = item.rate || 0;
+        const effectiveQty = Math.max(0, originalQty - dust);
+        const amount = effectiveQty * rate;
+        totalCredit += amount;
+        return {
+            description: item.description || '',
+            dust: dust,
+            qty: originalQty,  // Show original QTY
+            rate: rate,
+            amount: formatNumber(amount),
+            odd: index % 2 === 1
+        };
+    });
 
-            const html = compiledCustomerTemplate({
-                logoUrl, day, month, year,
-                companyName: companyName,
-                customerName: receipt.customerName || '',
-                customerAddress: receipt.customerAddress || '',
-                customerPhone: receipt.customerPhone || '',
-                vehicleNo: receipt.vehicle || '',
-                items: items,
-                offloadingAmount: formatNumber(receipt.less.find(l => l.description === 'Offloading')?.amount || 0),
-                debtAmount: (() => {
-                    const debt = receipt.less.find(l => l.description === 'Debt Deduction')?.amount || 0;
-                    return debt > 0 ? formatNumber(debt) : null;
-                })(),
-                creditAmount: formatCurrency(totalCredit),
-                debitAmount: formatCurrency(receipt.debitTotal || 0),
-                balanceAmount: formatCurrency(receipt.balance || 0)
-            });
+    const html = compiledCustomerTemplate({
+        logoUrl, day, month, year,
+        companyName: companyName,
+        customerName: receipt.customerName || '',
+        customerAddress: receipt.customerAddress || '',
+        customerPhone: receipt.customerPhone || '',
+        vehicleNo: receipt.vehicle || '',
+        items: items,
+        offloadingAmount: formatNumber(receipt.less.find(l => l.description === 'Offloading')?.amount || 0),
+        debtAmount: (() => {
+            const debt = receipt.less.find(l => l.description === 'Debt Deduction')?.amount || 0;
+            return debt > 0 ? formatNumber(debt) : null;
+        })(),
+        creditAmount: formatCurrency(totalCredit),
+        debitAmount: formatCurrency(receipt.debitTotal || 0),
+        balanceAmount: formatCurrency(Math.max(0, totalCredit - (receipt.debitTotal || 0)))
+    });
 
-            return await generateImageResponse(html, `customer-receipt-${receipt.receiptNumber}`, res);
+    return await generateImageResponse(html, `customer-receipt-${receipt.receiptNumber}`, res);
+}
 
-        } else {
-            let totalCredit = 0;
-            let totalProfit = 0;
-            const profits = [];
-            
-            const items = receipt.credits.map((item, index) => {
-                const effectiveQty = Math.max(0, (item.qty || 0) - (item.dust || 0));
-                const iAmount = (item.qty || 0) * (item.initialRate || item.rate || 0);
-                const fAmount = effectiveQty * (item.rate || 0);
-                const profit = fAmount - iAmount;
-                totalCredit += fAmount;
-                totalProfit += profit > 0 ? profit : 0;
-                if (profit !== 0) {
-                    profits.push({ name: item.description || '', amount: formatCurrency(profit) });
-                }
-                return {
-                    description: item.description || '',
-                    dust: item.dust || 0,
-                    qty: item.qty || 0,
-                    effectiveQty: effectiveQty,
-                    iRate: item.initialRate || item.rate || 0,
-                    fRate: item.rate || 0,
-                    iAmount: formatNumber(iAmount),
-                    fAmount: formatNumber(fAmount),
-                    odd: index % 2 === 1
-                };
-            });
-
-            const html = compiledCompanyTemplate({
-                logoUrl, day, month, year,
-                companyName: companyName,
-                customerName: receipt.customerName || '',
-                customerAddress: receipt.customerAddress || '',
-                customerPhone: receipt.customerPhone || '',
-                vehicleNo: receipt.vehicle || '',
-                items: items,
-                offloadingAmount: formatNumber(receipt.less.find(l => l.description === 'Offloading')?.amount || 0),
-                debtAmount: (() => {
-                    const debt = receipt.less.find(l => l.description === 'Debt Deduction')?.amount || 0;
-                    return debt > 0 ? formatNumber(debt) : null;
-                })(),
-                profits: profits,
-                totalProfit: formatCurrency(totalProfit),
-                creditAmount: formatCurrency(totalCredit),
-                debitAmount: formatCurrency(receipt.debitTotal || 0),
-                balanceAmount: formatCurrency(receipt.balance || 0)
-            });
-
-            return await generateImageResponse(html, `company-receipt-${receipt.receiptNumber}`, res);
+// For COMPANY receipt - CHANGE THIS SECTION:
+else {
+    let totalCredit = 0;
+    let totalProfit = 0;
+    const profits = [];
+    
+    const items = receipt.credits.map((item, index) => {
+        const originalQty = item.qty || 0;
+        const dust = item.dust || 0;
+        const rate = item.rate || 0;
+        const initialRate = item.initialRate || rate;
+        const effectiveQty = Math.max(0, originalQty - dust);
+        const iAmount = originalQty * initialRate;
+        const fAmount = effectiveQty * rate;
+        const profit = fAmount - iAmount;
+        totalCredit += fAmount;
+        totalProfit += profit > 0 ? profit : 0;
+        if (profit !== 0) {
+            profits.push({ name: item.description || '', amount: formatCurrency(profit) });
         }
+        return {
+            description: item.description || '',
+            dust: dust,
+            qty: originalQty,  // Show original QTY
+            effectiveQty: effectiveQty,
+            iRate: initialRate,
+            fRate: rate,
+            iAmount: formatNumber(iAmount),
+            fAmount: formatNumber(fAmount),
+            odd: index % 2 === 1
+        };
+    });
+
+    const html = compiledCompanyTemplate({
+        logoUrl, day, month, year,
+        companyName: companyName,
+        customerName: receipt.customerName || '',
+        customerAddress: receipt.customerAddress || '',
+        customerPhone: receipt.customerPhone || '',
+        vehicleNo: receipt.vehicle || '',
+        items: items,
+        offloadingAmount: formatNumber(receipt.less.find(l => l.description === 'Offloading')?.amount || 0),
+        debtAmount: (() => {
+            const debt = receipt.less.find(l => l.description === 'Debt Deduction')?.amount || 0;
+            return debt > 0 ? formatNumber(debt) : null;
+        })(),
+        profits: profits,
+        totalProfit: formatCurrency(totalProfit),
+        creditAmount: formatCurrency(totalCredit),
+        debitAmount: formatCurrency(receipt.debitTotal || 0),
+        balanceAmount: formatCurrency(Math.max(0, totalCredit - (receipt.debitTotal || 0)))
+    });
+
+    return await generateImageResponse(html, `company-receipt-${receipt.receiptNumber}`, res);
+}
     } catch (error) {
         console.error('Error in getReceiptPdf:', error);
         if (!res.headersSent) {
