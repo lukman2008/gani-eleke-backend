@@ -10,7 +10,7 @@ connectDB();
 const authRoutes = require('./routes/authRoutes');
 const receiptRoutes = require('./routes/receiptRoutes');
 const landRentRoutes = require('./routes/landRentRoutes');
-const supplyRoutes = require('./routes/supplyRoutes');
+// const supplyRoutes = require('./routes/supplyRoutes');
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -36,7 +36,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/receipts', receiptRoutes);
 app.use('/api/landrents', landRentRoutes);
-app.use('/api/supplies', supplyRoutes);
+// app.use('/api/supplies', supplyRoutes);
 
 // Global error handling middleware
 app.use((err, req, res, next) => {

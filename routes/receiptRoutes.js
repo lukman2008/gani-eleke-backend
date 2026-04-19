@@ -1,36 +1,29 @@
 ﻿const express = require('express');
-const { protect, authorizeAdmin } = require('../middleware/authMiddleware');
-const { 
-  createReceipt, 
-  getReceipts, 
-  getReceiptById, 
-  updateReceipt,
-  deleteReceipt, 
-  getReceiptSummary,
-  clearReceipts,
-  getReceiptPdf 
+const router = express.Router();
+const { protect } = require('../middleware/authMiddleware');
+const {
+    createReceipt,
+    getReceipts,
+    getReceiptById,
+    updateReceipt,
+    deleteReceipt,
+    getReceiptSummary,
+    clearReceipts,
+    getReceiptPdf
 } = require('../controllers/receiptController');
 
-const router = express.Router();
-
+// All routes require authentication
 router.use(protect);
 
-// Summary and clear routes
-router.route('/summary').get(getReceiptSummary);
-router.route('/clear').delete(authorizeAdmin, clearReceipts);
-
-// Main CRUD routes
-router.route('/')
-  .get(getReceipts)
-  .post(createReceipt);
-
-// PDF route
-router.route('/:id/pdf').get(getReceiptPdf);
-
-// Single receipt routes
-router.route('/:id')
-  .get(getReceiptById)
-  .put(updateReceipt)
-  .delete(deleteReceipt);
+// Receipt routes
+router.post('/', createReceipt);
+router.get('/', getReceipts);
+router.get('/summary', getReceiptSummary);
+router.get('/clear', clearReceipts);  // NOTE: This should be before /:id
+router.delete('/clear', clearReceipts);  // DELETE method for clearing
+router.get('/:id', getReceiptById);
+router.put('/:id', updateReceipt);
+router.delete('/:id', deleteReceipt);
+router.get('/:id/pdf', getReceiptPdf);
 
 module.exports = router;

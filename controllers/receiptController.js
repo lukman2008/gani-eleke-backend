@@ -77,7 +77,6 @@ const generateImageResponse = async (html, filename, res) => {
         
     } catch (error) {
         console.error('API Error:', error.message);
-        // Fallback: send HTML
         res.setHeader('Content-Type', 'text/html');
         res.setHeader('Content-Disposition', `attachment; filename="${filename}.html"`);
         res.send(html);
@@ -95,11 +94,10 @@ const computeReceipt = ({ customerName, credits = [], less = [], note }) => {
     const dust = Number(item.dust || 0);
     const initialRate = Number(item.initialRate) || rate;
     
-    // CORRECTED: Both I-AMOUNT and F-AMOUNT use effective quantity (QTY - DUST)
     const effectiveQty = Math.max(0, qty - dust);
-    const iAmount = effectiveQty * initialRate;  // I-AMOUNT = (QTY - DUST) × I-RATE
-    const fAmount = effectiveQty * rate;         // F-AMOUNT = (QTY - DUST) × F-RATE
-    const profit = fAmount - iAmount;            // Profit = F-AMOUNT - I-AMOUNT
+    const iAmount = effectiveQty * initialRate;
+    const fAmount = effectiveQty * rate;
+    const profit = fAmount - iAmount;
 
     return {
       description: item.description || '',
@@ -115,7 +113,6 @@ const computeReceipt = ({ customerName, credits = [], less = [], note }) => {
     };
   });
 
-  // Keep Offloading and Debt for calculation, but Debt will NOT be shown in receipt
   const normalizedLess = less.map((item) => ({
     description: item.description || '',
     amount: Number(item.amount || 0),
@@ -234,7 +231,7 @@ const deleteReceipt = async (req, res) => {
 };
 
 /* =========================
-   GET RECEIPT SUMMARY - CORRECTED AGENT REVENUE
+   GET RECEIPT SUMMARY - FIXED WITH WEEKLY AGENT REVENUE
 ========================= */
 
 const getReceiptSummary = async (req, res) => {
@@ -244,23 +241,40 @@ const getReceiptSummary = async (req, res) => {
   const totalDebitAmount = receipts.reduce((sum, receipt) => sum + (receipt.debitTotal || 0), 0);
   const totalBalance = receipts.reduce((sum, receipt) => sum + (receipt.balance || 0), 0);
   
-  // Calculate Agent Revenue = Sum of all Profits (F-AMOUNT - I-AMOUNT)
   let totalAgentRevenue = 0;
+  let agentRevenueThisWeek = 0;
+  
+  const now = new Date();
+  const oneWeekAgo = new Date();
+  oneWeekAgo.setDate(now.getDate() - 7);
+  oneWeekAgo.setHours(0, 0, 0, 0);
+  
   for (const receipt of receipts) {
+    let receiptProfit = 0;
     for (const item of receipt.credits) {
       const profit = (item.fAmount || 0) - (item.iAmount || 0);
-      totalAgentRevenue += profit > 0 ? profit : 0;
+      if (profit > 0) {
+        receiptProfit += profit;
+      }
+    }
+    totalAgentRevenue += receiptProfit;
+    
+    const receiptDate = receipt.createdAt || receipt.date;
+    if (receiptDate) {
+      const receiptDateObj = new Date(receiptDate);
+      if (receiptDateObj >= oneWeekAgo) {
+        agentRevenueThisWeek += receiptProfit;
+      }
     }
   }
-  
-  console.log('Total Agent Revenue Calculated:', totalAgentRevenue);
   
   res.json({
     totalReceipts,
     totalCreditAmount,
     totalDebitAmount,
     totalBalance,
-    totalAgentRevenue
+    totalAgentRevenue,
+    agentRevenueThisWeek
   });
 };
 
@@ -274,7 +288,7 @@ const clearReceipts = async (req, res) => {
 };
 
 /* =========================
-   GET RECEIPT IMAGE (PNG) - CORRECTED CALCULATIONS
+   GET RECEIPT IMAGE (PNG)
 ========================= */
 
 const getReceiptPdf = async (req, res) => {
@@ -290,13 +304,10 @@ const getReceiptPdf = async (req, res) => {
         const logoUrl = getLogoUrl();
         const companyName = receipt.companyName || '';
 
-        // Get offloading amount and debt amount (debt used for calculation but NOT shown)
-        const offloadingAmount = receipt.less.find(l => l.description === 'Offloading')?.amount || 0;
-        const debtAmount = receipt.less.find(l => l.description === 'Debt Deduction')?.amount || 0;
+        const offloadingAmount = receipt.less?.find(l => l.description === 'Offloading')?.amount || 0;
         const totalDebit = (receipt.debitTotal || 0);
 
         if (type === 'customer') {
-            // CUSTOMER RECEIPT: Amount = (QTY - DUST) × RATE
             let totalCredit = 0;
             const items = receipt.credits.map((item, index) => {
                 const originalQty = item.qty || 0;
@@ -315,7 +326,6 @@ const getReceiptPdf = async (req, res) => {
                 };
             });
 
-            // Balance = Total Credit - Offloading - Debt (Debt deducted but NOT shown)
             const finalBalance = Math.max(0, totalCredit - totalDebit);
 
             const html = compiledCustomerTemplate({
@@ -334,7 +344,6 @@ const getReceiptPdf = async (req, res) => {
 
             return await generateImageResponse(html, `customer-receipt-${receipt.receiptNumber}`, res);
         } else {
-            // COMPANY RECEIPT: CORRECTED - Both I-AMOUNT and F-AMOUNT use (QTY - DUST)
             let totalCredit = 0;
             let totalProfit = 0;
             const profits = [];
@@ -345,28 +354,28 @@ const getReceiptPdf = async (req, res) => {
                 const rate = item.rate || 0;
                 const initialRate = item.initialRate || rate;
                 const effectiveQty = Math.max(0, originalQty - dust);
-                // CORRECTED: Both use effectiveQty
                 const iAmount = effectiveQty * initialRate;
                 const fAmount = effectiveQty * rate;
                 const profit = fAmount - iAmount;
                 totalCredit += fAmount;
-                if (profit > 0) {
+                if (profit !== 0) {
                     totalProfit += profit;
-                    profits.push({ name: item.description || '', amount: formatCurrency(profit) });
+                    profits.push({ name: item.description || '', amount: formatCurrency(Math.abs(profit)), isPositive: profit > 0 });
                 }
                 return {
                     description: item.description || '',
                     dust: dust,
                     qty: originalQty,
-                    iRate: initialRate,
-                    fRate: rate,
+                    iRate: formatNumber(initialRate),
+                    fRate: formatNumber(rate),
                     iAmount: formatNumber(iAmount),
                     fAmount: formatNumber(fAmount),
+                    profitFormatted: formatCurrency(Math.abs(profit)),
+                    isProfitPositive: profit > 0,
                     odd: index % 2 === 1
                 };
             });
 
-            // Balance = Total Credit - Offloading - Debt (Debt deducted but NOT shown)
             const finalBalance = Math.max(0, totalCredit - totalDebit);
 
             const html = compiledCompanyTemplate({

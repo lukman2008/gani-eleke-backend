@@ -1,24 +1,31 @@
 const express = require('express');
 const router = express.Router();
-const { createLandRent, getLandRents, getLandRentById, updateLandRent, deleteLandRent, getLandRentSummary, clearLandRents } = require('../controllers/landRentController');
-const { protect, authorizeAdmin } = require('../middleware/authMiddleware');
+const { protect, adminOnly } = require('../middleware/authMiddleware');
+const {
+    createLandRent,
+    getLandRents,
+    getLandRentById,
+    updateLandRent,
+    deleteLandRent,
+    getLandRentSummary,
+    clearLandRents
+} = require('../controllers/landRentController');
 
 // All routes require authentication
 router.use(protect);
 
+// Routes
 router.route('/')
-  .get(getLandRents)
-  .post(createLandRent);
+    .get(getLandRents)
+    .post(createLandRent);
 
-router.route('/summary')
-  .get(getLandRentSummary);
+router.get('/summary', getLandRentSummary);
 
-router.route('/clear')
-  .delete(authorizeAdmin, clearLandRents);
+router.delete('/clear', adminOnly, clearLandRents);
 
 router.route('/:id')
-  .get(getLandRentById)
-  .put(updateLandRent)
-  .delete(deleteLandRent);
+    .get(getLandRentById)
+    .put(updateLandRent)
+    .delete(deleteLandRent);
 
 module.exports = router;
