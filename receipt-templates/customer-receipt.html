@@ -10,44 +10,32 @@
             padding: 0;
             box-sizing: border-box;
         }
-        html, body { 
-            margin: 0;
-            padding: 0;
-            background: transparent;
-        }
         body { 
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
             margin: 0;
             padding: 0;
             background: transparent;
-            display: inline-block;
+            width: fit-content;
+            height: fit-content;
         }
         .receipt-container {
             width: 100%;
             max-width: 800px;
             background: white;
-            padding: 20px 25px;
+            padding: 30px;
             position: relative;
+            overflow: hidden;
             border: 1px solid #e5e7eb;
             margin: 0;
-            display: block;
         }
         .header-bar {
             display: flex;
-            height: 6px;
-            margin-bottom: 20px;
+            height: 8px;
+            margin-bottom: 24px;
         }
         .bar-red { width: 50%; background-color: #dc2626; }
         .bar-blue { width: 66.666%; background-color: #1e3a8a; }
-        
-        .top-area {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-        .logo-section {
+         .logo-section {
             width: 45%;
             flex-shrink: 0;
         }
@@ -72,64 +60,67 @@
         .logo-text {
             flex-shrink: 1;
         }
-        .rc-number {
-            font-size: 9px;
-            font-weight: bold;
-            color: #4b5563;
-            margin-bottom: 2px;
-        }
         .company-name {
-            font-size: 22px;
+            font-size: 28px;
             font-weight: 800;
             color: #1e3a8a;
-            line-height: 1.1;
-            white-space: nowrap;
+            line-height: 1;
         }
         .company-tag {
-            font-size: 12px;
-            letter-spacing: 0.15em;
+            font-size: 18px;
+            letter-spacing: 0.2em;
             color: #6b7280;
-            font-weight: 500;
+            font-weight: 300;
         }
         .dealer-text {
-            font-size: 9px;
+            font-size: 10px;
             color: #dc2626;
             font-weight: bold;
-            margin-top: 6px;
+            margin-top: 8px;
             line-height: 1.3;
         }
         .dealer-text span { color: black; }
         
         .title-section {
-            width: 50%;
-            text-align: right;
+            width: 55%;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end; 
         }
         .main-title {
-            font-size: 20px;
+            font-size: 22px;
             font-weight: bold;
             color: #1f2937;
-            margin-bottom: 10px;
+            text-align: right;
+            margin-bottom: 12px;
         }
         .contact-info {
-            margin-bottom: 10px;
+            align-self: flex-end;
+            width: auto;    
+            text-align: left;
+            margin-bottom: 12px;
+            line-height: 1.3;
         }
         .contact-item {
-            margin-bottom: 6px;
+            margin-bottom: 8px;
         }
         .contact-label {
             color: #dc2626;
             font-weight: bold;
-            font-size: 8px;
+            display: block;
+            margin-bottom: 2px;
+            font-size: 9px;
         }
         .contact-detail {
-            font-size: 8px;
+            display: block;
+            font-size: 9px;
             color: #1f2937;
         }
-        
         .date-boxes {
             display: flex;
             justify-content: flex-end;
-            gap: 6px;
+            gap: 4px;
+            margin-top: 4px;
         }
         .date-item {
             display: flex;
@@ -139,54 +130,51 @@
         .date-label {
             background: #1e3a8a;
             color: white;
-            font-size: 9px;
-            padding: 3px 8px;
-            font-weight: bold;
+            font-size: 10px;
+            padding: 4px 8px;
         }
         .date-value {
-            min-width: 35px;
+            width: 32px;
             text-align: center;
-            font-size: 13px;
-            font-weight: bold;
-            padding: 3px 5px;
+            font-size: 14px;
+            padding: 0 4px;
         }
-        
         .company-row {
-            margin-bottom: 15px;
-            padding: 8px 12px;
+            margin-bottom: 16px;
+            padding: 8px;
             background: #f3f4f6;
-            border-radius: 6px;
+            border-radius: 8px;
         }
-        .company-row p { font-size: 13px; font-weight: bold; }
-        .company-row span { font-size: 14px; }
+        .company-row p { font-size: 14px; font-weight: bold; }
+        .company-row span { font-size: 16px; }
         
         .customer-info {
-            margin-bottom: 20px;
+            margin-bottom: 24px;
         }
         .info-row {
             display: flex;
             border: 1px solid #1e3a8a;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
             border-radius: 4px;
             overflow: hidden;
         }
         .info-label {
             background: #1e3a8a;
             color: white;
-            padding: 6px 12px;
+            padding: 8px 14px;
             font-weight: bold;
-            min-width: 85px;
-            font-size: 12px;
+            min-width: 96px;
+            font-size: 13px;
         }
         .info-value {
             flex: 1;
-            padding: 6px 10px;
-            font-size: 12px;
+            padding: 8px 12px;
+            font-size: 13px;
             background: white;
         }
         .info-row-group {
             display: flex;
-            gap: 12px;
+            gap: 16px;
         }
         .info-half {
             display: flex;
@@ -195,77 +183,89 @@
             border-radius: 4px;
             overflow: hidden;
         }
-        .info-half .info-label { 
+        .info-half .info-label {
             min-width: 70px;
-            padding: 6px 10px;
-            font-size: 12px;
+            background: #1e3a8a;
+            color: white;
+            padding: 8px 12px;
+            font-weight: bold;
+            font-size: 13px;
         }
         .info-half .info-value {
-            padding: 6px 10px;
-            font-size: 12px;
+            flex: 1;
+            padding: 8px 12px;
+            font-size: 13px;
+            background: white;
         }
         
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 20px;
+            margin-bottom: 24px;
         }
         th {
             background: #1e3a8a;
             color: white;
-            font-size: 11px;
-            padding: 8px 6px;
+            font-size: 12px;
+            padding: 10px 8px;
             text-align: left;
         }
         th.text-center, td.text-center { text-align: center; }
         th.text-right, td.text-right { text-align: right; }
         td {
-            padding: 6px 6px;
+            padding: 8px;
             border-bottom: 1px solid #e5e7eb;
-            font-size: 11px;
+            font-size: 12px;
         }
         .bg-gray-100 { background-color: #f3f4f6; }
-        
+        .bg-white { background-color: white; }
         .totals-section {
             display: flex;
             justify-content: flex-end;
-            margin-top: 15px;
+            margin-top: 16px;
         }
         .totals-box {
-            width: 250px;
+            width: 280px;
             text-align: right;
         }
         .total-row {
             display: flex;
             justify-content: space-between;
-            padding: 4px 0;
-            font-size: 12px;
+            padding: 6px 0;
         }
         .bold { font-weight: bold; }
         .balance-row {
             display: flex;
             justify-content: space-between;
-            padding: 8px 0;
-            margin-top: 6px;
+            padding: 10px 0;
+            margin-top: 8px;
             border-top: 2px solid #1e3a8a;
         }
-        .balance-label { font-weight: bold; font-size: 14px; }
-        .balance-value { font-weight: bold; font-size: 14px; color: #1e3a8a; }
+        .balance-label { font-weight: bold; font-size: 18px; }
+        .balance-value { font-weight: bold; font-size: 18px; color: #1e3a8a; }
         .footer {
-            margin-top: 20px;
-            padding-top: 12px;
+            margin-top: 32px;
+            padding-top: 16px;
             text-align: center;
             border-top: 1px solid #e5e7eb;
         }
-        .footer p { font-size: 11px; color: #4b5563; }
         .watermark {
             position: absolute;
             bottom: -90px;
             right: -90px;
-            opacity: 0.04;
+            opacity: 0.05;
             pointer-events: none;
         }
-        .watermark img { width: 400px; height: 400px; object-fit: contain; }
+        .watermark img { width: 500px; height: 500px; object-fit: contain; }
+        @media (max-width: 768px) {
+            .receipt-container { padding: 15px; }
+            table { font-size: 10px; }
+            th, td { padding: 4px; }
+            .main-title { font-size: 20px; }
+            .company-name { font-size: 22px; }
+            .info-label { min-width: 70px; padding: 6px 10px; font-size: 11px; }
+            .info-half .info-label { min-width: 60px; padding: 6px 8px; }
+        }
     </style>
 </head>
 <body>
@@ -275,16 +275,16 @@
             <div class="bar-blue"></div>
         </div>
         
-        <div class="top-area">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
             <div class="logo-section">
                 <div class="logo-wrapper">
                     <div class="logo-img">
                         <img src="{{logoUrl}}" alt="Logo" onerror="this.style.display='none'">
                     </div>
-                    <div class="logo-text">
-                        <div class="rc-number">RC:2197931</div>
-                        <div class="company-name">GANI ELEKE</div>
-                        <div class="company-tag">ENTERPRISES</div>
+                    <div>
+                        <p style="font-size: 10px; font-weight: bold; color: #4b5563;">RC:2197931</p>
+                        <h1 class="company-name">GANI ELEKE</h1>
+                        <p class="company-tag">ENTERPRISES</p>
                     </div>
                 </div>
                 <div class="dealer-text">
@@ -294,7 +294,7 @@
             </div>
 
             <div class="title-section">
-                <div class="main-title">PURCHASE VOUCHER</div>
+                <h2 class="main-title">PURCHASE VOUCHER</h2>
                 <div class="contact-info">
                     <div class="contact-item">
                         <div class="contact-label">Office Address:</div>
@@ -312,7 +312,7 @@
                 <div class="date-boxes">
                     <div class="date-item"><span class="date-label">DD</span><span class="date-value">{{day}}</span></div>
                     <div class="date-item"><span class="date-label">MM</span><span class="date-value">{{month}}</span></div>
-                    <div class="date-item"><span class="date-label">YY</span><span class="date-value">{{year}}</span></div>
+                    <div class="date-item"><span class="date-label">YY</span><span class="date-value" style="width: 48px;">{{year}}</span></div>
                 </div>
             </div>
         </div>
@@ -365,21 +365,21 @@
             </tbody>
         </table>
 
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px;">
             <thead>
                 <tr style="background: #1e3a8a; color: white;">
-                    <th style="padding: 8px 8px; text-align: left;">Descriptions</th>
-                    <th style="padding: 8px 8px; text-align: right;">Amount #</th>
+                    <th style="padding: 10px 8px; text-align: left;">Descriptions</th>
+                    <th style="padding: 10px 8px; text-align: right;">Amount #</th>
                 </tr>
             </thead>
             <tbody>
                 <tr class="bg-white">
-                    <td style="padding: 6px 8px; border-bottom: 1px solid #e5e7eb;">Offloading</td>
-                    <td style="padding: 6px 8px; text-align: right; border-bottom: 1px solid #e5e7eb;">{{offloadingAmount}}</td>
+                    <td style="padding: 8px 8px; border-bottom: 1px solid #e5e7eb;">Offloading</td>
+                    <td style="padding: 8px 8px; text-align: right; border-bottom: 1px solid #e5e7eb;">{{offloadingAmount}}</td>
                 </tr>
                 <tr class="bg-gray-100">
-                    <td style="padding: 6px 8px; border-bottom: 1px solid #e5e7eb;">Debt</td>
-                    <td style="padding: 6px 8px; text-align: right; border-bottom: 1px solid #e5e7eb;">{{debtAmount}}</td>
+                    <td style="padding: 8px 8px; border-bottom: 1px solid #e5e7eb;">Debt</td>
+                    <td style="padding: 8px 8px; text-align: right; border-bottom: 1px solid #e5e7eb;">{{debtAmount}}</td>
                 </tr>
             </tbody>
         </table>
@@ -393,7 +393,7 @@
         </div>
 
         <div class="footer">
-            <p>Thank you for doing business with us.</p>
+            <p style="font-style: italic; color: #4b5563;">Thank you for doing business with us.</p>
         </div>
 
         <div class="watermark">
