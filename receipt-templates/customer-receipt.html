@@ -13,8 +13,8 @@
         body { 
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
             margin: 0; 
-            padding: 20px; 
-            /* background: #f3f4f6; */
+            padding: 0;
+            background: transparent;
         }
         .receipt-container {
             max-width: 800px;
@@ -86,7 +86,7 @@
             margin-bottom: 12px;
         }
         .contact-info {
-            align-self: flex-end;   /* move it under the title edge */
+            align-self: flex-end;
             width: auto;    
             text-align: left;
             margin-bottom: 12px;
@@ -139,7 +139,6 @@
         .company-row p { font-size: 14px; font-weight: bold; }
         .company-row span { font-size: 16px; }
         
-        /* CUSTOMER INFO - perfectly aligned, no shift to middle */
         .customer-info {
             margin-bottom: 24px;
         }
@@ -267,7 +266,6 @@
             <div class="bar-blue"></div>
         </div>
         
-        <!-- TOP SECTION: Logo on left, Right side: PURCHASE VOUCHER + contact details + date boxes (all stacked, no middle) -->
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
             <div class="logo-section">
                 <div class="logo-wrapper">
@@ -286,10 +284,8 @@
                 </div>
             </div>
 
-            <!-- RIGHT SIDE: title, contact info, date (all properly stacked, contact info directly under title, no middle shifting) -->
             <div class="title-section">
-                <h2 class="main-title">PURCHASE  VOUCHER</h2>
-                <!-- Contact info block: directly under title, left-aligned inside right container -->
+                <h2 class="main-title">PURCHASE VOUCHER</h2>
                 <div class="contact-info">
                     <div class="contact-item">
                         <div class="contact-label">Office Address:</div>
@@ -304,7 +300,6 @@
                         <div class="contact-detail">ganiolaiya123@gmail.com</div>
                     </div>
                 </div>
-                <!-- Date boxes: placed directly after contact, right-aligned as original -->
                 <div class="date-boxes">
                     <div class="date-item"><span class="date-label">DD</span><span class="date-value">{{day}}</span></div>
                     <div class="date-item"><span class="date-label">MM</span><span class="date-value">{{month}}</span></div>
@@ -313,12 +308,10 @@
             </div>
         </div>
 
-        <!-- Company row: unchanged -->
         <div class="company-row">
             <p>Company: <span>{{companyName}}</span></p>
         </div>
 
-        <!-- CUSTOMER INFO SECTION: fixed alignment - no middle shifting, clean borders -->
         <div class="customer-info">
             <div class="info-row">
                 <span class="info-label">TO</span>
@@ -340,7 +333,6 @@
             </div>
         </div>
 
-        <!-- Items table -->
         <table>
             <thead>
                 <tr>
@@ -353,7 +345,7 @@
             </thead>
             <tbody>
                 {{#each items}}
-                <tr class="{{#if odd}}bg-gray-700{{else}}bg-white{{/if}}">
+                <tr class="{{#if odd}}bg-gray-100{{else}}bg-white{{/if}}">
                     <td>{{description}}</td>
                     <td class="text-center">{{dust}}KG</td>
                     <td class="text-center">{{qty}}</td>
@@ -364,7 +356,7 @@
             </tbody>
         </table>
 
-        <!-- Descriptions table: Offloading + Debt row (Debt amount remains blank as per original receipt) -->
+        <!-- Descriptions table with BOTH Offloading and Debt visible -->
         <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px;">
             <thead>
                 <tr style="background: #1e3a8a; color: white;">
@@ -379,13 +371,11 @@
                 </tr>
                 <tr class="bg-gray-100">
                     <td style="padding: 8px 8px; border-bottom: 1px solid #e5e7eb;">Debt</td>
-                    <!-- Debt amount remains empty as per original design -->
-                    <td style="padding: 8px 8px; text-align: right; border-bottom: 1px solid #e5e7eb;"></td>
+                    <td style="padding: 8px 8px; text-align: right; border-bottom: 1px solid #e5e7eb;">{{debtAmount}}</td>
                 </tr>
             </tbody>
         </table>
 
-        <!-- Totals section: Credit, Debit, Balance -->
         <div class="totals-section">
             <div class="totals-box">
                 <div class="total-row"><span class="bold">Credit:</span><span>{{creditAmount}}</span></div>
@@ -394,12 +384,10 @@
             </div>
         </div>
 
-        <!-- Footer message unchanged -->
         <div class="footer">
             <p style="font-style: italic; color: #4b5563;">Thank you for doing business with us.</p>
         </div>
 
-        <!-- Watermark logo -->
         <div class="watermark">
             <img src="{{logoUrl}}" alt="Watermark" onerror="this.style.display='none'">
         </div>

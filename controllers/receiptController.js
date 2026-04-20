@@ -42,7 +42,7 @@ try {
 }
 
 /* =========================
-   IMAGE GENERATION USING API
+   IMAGE GENERATION USING API - NO BACKGROUND
 ========================= */
 
 const generateImageResponse = async (html, filename, res) => {
@@ -51,7 +51,7 @@ const generateImageResponse = async (html, filename, res) => {
         
         const response = await axios.post('https://hcti.io/v1/image', {
             html: html,
-            css: "body { padding: 20px; background: white; font-family: 'Inter', sans-serif; }",
+            css: "body { margin: 0; padding: 0; background: transparent; font-family: 'Inter', sans-serif; } .receipt-container { margin: 0 auto; background: white; }",
             google_fonts: "Inter"
         }, {
             auth: {
@@ -288,7 +288,7 @@ const clearReceipts = async (req, res) => {
 };
 
 /* =========================
-   GET RECEIPT IMAGE (PNG)
+   GET RECEIPT IMAGE (PNG) - WITH DEBT VISIBLE
 ========================= */
 
 const getReceiptPdf = async (req, res) => {
@@ -304,10 +304,13 @@ const getReceiptPdf = async (req, res) => {
         const logoUrl = getLogoUrl();
         const companyName = receipt.companyName || '';
 
+        // Get offloading amount and debt amount - BOTH VISIBLE NOW
         const offloadingAmount = receipt.less?.find(l => l.description === 'Offloading')?.amount || 0;
+        const debtAmount = receipt.less?.find(l => l.description === 'Debt Deduction')?.amount || 0;
         const totalDebit = (receipt.debitTotal || 0);
 
         if (type === 'customer') {
+            // CUSTOMER RECEIPT: Amount = (QTY - DUST) × RATE
             let totalCredit = 0;
             const items = receipt.credits.map((item, index) => {
                 const originalQty = item.qty || 0;
@@ -337,6 +340,7 @@ const getReceiptPdf = async (req, res) => {
                 vehicleNo: receipt.vehicle || '',
                 items: items,
                 offloadingAmount: formatNumber(offloadingAmount),
+                debtAmount: formatNumber(debtAmount),
                 creditAmount: formatCurrency(totalCredit),
                 debitAmount: formatCurrency(totalDebit),
                 balanceAmount: formatCurrency(finalBalance)
@@ -344,6 +348,7 @@ const getReceiptPdf = async (req, res) => {
 
             return await generateImageResponse(html, `customer-receipt-${receipt.receiptNumber}`, res);
         } else {
+            // COMPANY RECEIPT: Shows I-RATE, F-RATE, PROFIT, and DEBT
             let totalCredit = 0;
             let totalProfit = 0;
             const profits = [];
@@ -387,6 +392,7 @@ const getReceiptPdf = async (req, res) => {
                 vehicleNo: receipt.vehicle || '',
                 items: items,
                 offloadingAmount: formatNumber(offloadingAmount),
+                debtAmount: formatNumber(debtAmount),
                 profits: profits,
                 totalProfit: formatCurrency(totalProfit),
                 creditAmount: formatCurrency(totalCredit),

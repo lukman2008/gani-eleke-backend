@@ -13,8 +13,8 @@
         body { 
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
             margin: 0; 
-            padding: 20px; 
-            background: #f3f4f6;
+            padding: 0;
+            background: transparent;
         }
         .receipt-container {
             max-width: 800px;
@@ -72,7 +72,6 @@
         }
         .dealer-text span { color: black; }
         
-        /* RIGHT SECTION (title + contact + date) - PERFECT ALIGNMENT, NO MIDDLE SHIFT */
         .title-section {
             width: 55%;
             display: flex;
@@ -86,7 +85,6 @@
             text-align: right;
             margin-bottom: 12px;
         }
-        /* Contact block directly under title, left-aligned inside right column - FIXED POSITION */
         .contact-info {
             align-self: flex-end;
             width: auto;
@@ -109,7 +107,6 @@
             font-size: 9px;
             color: #1f2937;
         }
-        /* date boxes stay right aligned under contact */
         .date-boxes {
             display: flex;
             justify-content: flex-end;
@@ -142,7 +139,6 @@
         .company-row p { font-size: 14px; font-weight: bold; }
         .company-row span { font-size: 16px; }
         
-        /* STYLED CUSTOMER INFO - matching the Purchase Voucher exactly */
         .customer-info {
             margin-bottom: 24px;
         }
@@ -271,9 +267,7 @@
             <div class="bar-blue"></div>
         </div>
         
-        <!-- TOP AREA: Logo left, Right side: COMPANY COPY + contact info + date boxes (all stacked vertically, contact info directly under title - NO MIDDLE SHIFT) -->
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
-            <!-- Left: Logo & company details (unchanged) -->
             <div class="logo-section">
                 <div class="logo-wrapper">
                     <div class="logo-img">
@@ -291,10 +285,8 @@
                 </div>
             </div>
 
-            <!-- RIGHT SECTION: "COMPANY COPY" then contact details block directly under it, then date boxes (contact info is properly placed, not in the middle) -->
             <div class="title-section">
                 <h2 class="main-title">COMPANY COPY</h2>
-                <!-- Contact info: directly under title - this is the correct position, not floating in the middle -->
                 <div class="contact-info">
                     <div class="contact-item">
                         <div class="contact-label">Office Address:</div>
@@ -309,7 +301,6 @@
                         <div class="contact-detail">ganiolaiya123@gmail.com</div>
                     </div>
                 </div>
-                <!-- Date boxes stay under contact, right-aligned -->
                 <div class="date-boxes">
                     <div class="date-item"><span class="date-label">DD</span><span class="date-value">{{day}}</span></div>
                     <div class="date-item"><span class="date-label">MM</span><span class="date-value">{{month}}</span></div>
@@ -318,12 +309,10 @@
             </div>
         </div>
 
-        <!-- Company row: unchanged -->
         <div class="company-row">
             <p>Company: <span>{{companyName}}</span></p>
         </div>
 
-        <!-- Customer info block: unchanged (matches purchase voucher) -->
         <div class="customer-info">
             <div class="info-row">
                 <span class="info-label">TO</span>
@@ -345,7 +334,6 @@
             </div>
         </div>
 
-        <!-- Items table: dynamic with dust/qty/f-rate etc -->
         <table>
             <thead>
                 <tr>
@@ -360,7 +348,7 @@
             </thead>
             <tbody>
                 {{#each items}}
-                <tr class="{{#if odd}}bg-gray-700{{else}}bg-white{{/if}}">
+                <tr class="{{#if odd}}bg-gray-100{{else}}bg-white{{/if}}">
                     <td>{{description}}</td>
                     <td class="text-center">{{dust}}KG</td>
                     <td class="text-center">{{qty}}</td>
@@ -373,7 +361,7 @@
             </tbody>
         </table>
 
-        <!-- Descriptions table: Offloading + Debt row (blank amount for debt per original receipt) -->
+        <!-- Descriptions table with BOTH Offloading and Debt visible -->
         <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px;">
             <thead>
                 <tr style="background: #1e3a8a; color: white;">
@@ -388,13 +376,11 @@
                 </tr>
                 <tr class="bg-gray-100">
                     <td style="padding: 8px 8px; border-bottom: 1px solid #e5e7eb;">Debt</td>
-                    <!-- Debt amount remains empty as per receipt: exactly like original design -->
-                    <td style="padding: 8px 8px; text-align: right; border-bottom: 1px solid #e5e7eb;"></td>
+                    <td style="padding: 8px 8px; text-align: right; border-bottom: 1px solid #e5e7eb;">{{debtAmount}}</td>
                 </tr>
             </tbody>
         </table>
 
-        <!-- Profits and totals: consistent layout -->
         <div class="profit-section">
             <div class="profit-left">
                 <p class="profit-title">Profits:</p>
@@ -410,12 +396,10 @@
             </div>
         </div>
 
-        <!-- Footer message unchanged -->
         <div class="footer">
             <p style="font-style: italic; color: #4b5563;">Thank you for doing business with us.</p>
         </div>
 
-        <!-- Watermark logo -->
         <div class="watermark">
             <img src="{{logoUrl}}" alt="Watermark" onerror="this.style.display='none'">
         </div>
