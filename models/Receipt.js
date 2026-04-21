@@ -7,10 +7,9 @@ const creditItemSchema = new mongoose.Schema({
   dust: { type: Number, default: 0, min: 0 },
   effectiveQty: { type: Number, default: 0, min: 0 },
   initialRate: { type: Number, default: 0, min: 0 },
-  amount: { type: Number, required: true, min: 0 },
-  profit: { type: Number, default: 0 },
   iAmount: { type: Number, default: 0 },
-  fAmount: { type: Number, default: 0 }
+  fAmount: { type: Number, default: 0 },
+  profitBeforeExpenses: { type: Number, default: 0 }
 }, { _id: false });
 
 const deductionSchema = new mongoose.Schema({
@@ -40,8 +39,15 @@ const receiptSchema = new mongoose.Schema({
   credits: { type: [creditItemSchema], required: true },
   less: { type: [deductionSchema], default: [] },
   subTotal: { type: Number, required: true, min: 0 },
+  totalCostPrice: { type: Number, default: 0, min: 0 },
+  profitBeforeExpenses: { type: Number, default: 0 },
+  netProfit: { type: Number, default: 0 },
+  offloadingAmount: { type: Number, default: 0 },
+  debtAmount: { type: Number, default: 0 },
+  cashReceived: { type: Number, default: 0 },
+  cashInHand: { type: Number, default: 0 },
   debitTotal: { type: Number, required: true, min: 0, default: 0 },
-  balance: { type: Number, required: true, min: 0, default: 0 }, // min 0 is important
+  balance: { type: Number, required: true, min: 0, default: 0 },
   note: { type: String, trim: true },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
 }, { timestamps: true });
