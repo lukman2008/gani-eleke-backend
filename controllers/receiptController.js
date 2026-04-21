@@ -51,7 +51,7 @@ const generateImageResponse = async (html, filename, res) => {
         
         const response = await axios.post('https://hcti.io/v1/image', {
             html: html,
-            css: "body { margin: 0 !important; padding: 0 !important; background: transparent !important; width: fit-content !important; height: fit-content !important; } .receipt-container { margin: 0 !important; }",
+            css: "body { margin: 0; padding: 0; background: transparent; font-family: 'Inter', sans-serif; } .receipt-container { margin: 0 auto; background: white; }",
             google_fonts: "Inter"
         }, {
             auth: {
