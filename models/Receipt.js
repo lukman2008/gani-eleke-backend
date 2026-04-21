@@ -9,7 +9,7 @@ const creditItemSchema = new mongoose.Schema({
   initialRate: { type: Number, default: 0, min: 0 },
   iAmount: { type: Number, default: 0 },
   fAmount: { type: Number, default: 0 },
-  profitBeforeExpenses: { type: Number, default: 0 }
+  profit: { type: Number, default: 0 },
 }, { _id: false });
 
 const deductionSchema = new mongoose.Schema({
@@ -40,7 +40,7 @@ const receiptSchema = new mongoose.Schema({
   less: { type: [deductionSchema], default: [] },
   subTotal: { type: Number, required: true, min: 0 },
   totalCostPrice: { type: Number, default: 0, min: 0 },
-  profitBeforeExpenses: { type: Number, default: 0 },
+  totalProfitBeforeOffloading: { type: Number, default: 0 },
   netProfit: { type: Number, default: 0 },
   offloadingAmount: { type: Number, default: 0 },
   debtAmount: { type: Number, default: 0 },

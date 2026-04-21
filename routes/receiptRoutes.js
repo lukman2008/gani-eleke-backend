@@ -9,21 +9,19 @@ const {
     deleteReceipt,
     getReceiptSummary,
     clearReceipts,
-    getReceiptPdf
+    getReceiptHTML
 } = require('../controllers/receiptController');
 
-// All routes require authentication
 router.use(protect);
 
-// Receipt routes
 router.post('/', createReceipt);
 router.get('/', getReceipts);
 router.get('/summary', getReceiptSummary);
-router.get('/clear', clearReceipts);  // NOTE: This should be before /:id
-router.delete('/clear', clearReceipts);  // DELETE method for clearing
+router.get('/clear', clearReceipts);
+router.delete('/clear', clearReceipts);
 router.get('/:id', getReceiptById);
 router.put('/:id', updateReceipt);
 router.delete('/:id', deleteReceipt);
-router.get('/:id/pdf', getReceiptPdf);
+router.get('/:id/html', getReceiptHTML);  // New endpoint for HTML
 
 module.exports = router;

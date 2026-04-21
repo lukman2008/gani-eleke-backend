@@ -2,7 +2,6 @@
 const fs = require('fs');
 const path = require('path');
 const handlebars = require('handlebars');
-const axios = require('axios');
 
 /* =========================
    HELPERS & CONFIG
@@ -16,10 +15,6 @@ const formatCurrency = (amount) => {
 const formatNumber = (num) => num.toLocaleString('en-US');
 
 const getLogoUrl = () => 'https://gani-eleke-project.vercel.app/frontend/img/logo.jpeg';
-
-// HTMLCSSTOIMAGE API credentials
-const HCTI_USER_ID = '01KPBNPMNFC057VW7R1Q2ERBCE';
-const HCTI_API_KEY = '019d975b-52af-730a-ad51-dbd52470e6ee';
 
 /* =========================
    TEMPLATE COMPILATION
@@ -42,49 +37,13 @@ try {
 }
 
 /* =========================
-   IMAGE GENERATION USING API
-========================= */
-
-const generateImageResponse = async (html, filename, res) => {
-    try {
-        console.log('Converting HTML to image using API...');
-        
-        const response = await axios.post('https://hcti.io/v1/image', {
-            html: html,
-            css: "body { margin: 0; padding: 0; background: transparent; font-family: 'Inter', sans-serif; } .receipt-container { margin: 0 auto; background: white; }",
-            google_fonts: "Inter"
-        }, {
-            auth: {
-                username: HCTI_USER_ID,
-                password: HCTI_API_KEY
-            },
-            timeout: 60000
-        });
-        
-        if (response.data && response.data.url) {
-            const imageResponse = await axios.get(response.data.url, {
-                responseType: 'arraybuffer',
-                timeout: 60000
-            });
-            
-            res.setHeader('Content-Type', 'image/png');
-            res.setHeader('Content-Disposition', `attachment; filename="${filename}.png"`);
-            res.send(imageResponse.data);
-            console.log('Image sent successfully');
-        } else {
-            throw new Error('API did not return an image URL');
-        }
-        
-    } catch (error) {
-        console.error('API Error:', error.message);
-        res.setHeader('Content-Type', 'text/html');
-        res.setHeader('Content-Disposition', `attachment; filename="${filename}.html"`);
-        res.send(html);
-    }
-};
-
-/* =========================
-   COMPUTE RECEIPT - MAIN CALCULATION ENGINE
+   COMPUTE RECEIPT - CORRECTED CALCULATION
+   Client's correction:
+   - I-AMOUNT (Cost Price) = QTY × I-RATE (use FULL quantity)
+   - F-AMOUNT (Selling Price) = (QTY - DUST) × F-RATE
+   - Profit = F-AMOUNT - I-AMOUNT
+   - Net Profit = Profit - Offloading
+   - Debt does NOT affect profit
 ========================= */
 
 const computeReceipt = ({ customerName, credits = [], less = [], note }) => {
@@ -94,10 +53,15 @@ const computeReceipt = ({ customerName, credits = [], less = [], note }) => {
     const dust = Number(item.dust || 0);
     const initialRate = Number(item.initialRate) || rate;
     
+    // CORRECTED: I-AMOUNT uses FULL QTY (NOT minus dust)
+    const iAmount = qty * initialRate;
+    
+    // CORRECTED: F-AMOUNT uses effective QTY (QTY - DUST)
     const effectiveQty = Math.max(0, qty - dust);
-    const iAmount = effectiveQty * initialRate;
     const fAmount = effectiveQty * rate;
-    const profitBeforeExpenses = fAmount - iAmount;
+    
+    // Profit = F-AMOUNT - I-AMOUNT
+    const profit = fAmount - iAmount;
 
     return {
       description: item.description || '',
@@ -108,7 +72,7 @@ const computeReceipt = ({ customerName, credits = [], less = [], note }) => {
       initialRate: initialRate,
       iAmount: iAmount,
       fAmount: fAmount,
-      profitBeforeExpenses: profitBeforeExpenses,
+      profit: profit,
     };
   });
 
@@ -122,10 +86,8 @@ const computeReceipt = ({ customerName, credits = [], less = [], note }) => {
   
   const totalSellingPrice = normalizedCredits.reduce((sum, i) => sum + i.fAmount, 0);
   const totalCostPrice = normalizedCredits.reduce((sum, i) => sum + i.iAmount, 0);
-  const profitBeforeExpenses = totalSellingPrice - totalCostPrice;
-  const netProfit = Math.max(0, profitBeforeExpenses - offloadingAmount);
-  const cashReceived = Math.max(0, totalSellingPrice - debtAmount);
-  const cashInHand = Math.max(0, cashReceived - offloadingAmount);
+  const totalProfitBeforeOffloading = totalSellingPrice - totalCostPrice;
+  const netProfit = Math.max(0, totalProfitBeforeOffloading - offloadingAmount);
   const totalDeductions = offloadingAmount + debtAmount;
   const balance = Math.max(0, totalSellingPrice - totalDeductions);
 
@@ -135,12 +97,10 @@ const computeReceipt = ({ customerName, credits = [], less = [], note }) => {
     less: normalizedLess,
     subTotal: totalSellingPrice,
     totalCostPrice: totalCostPrice,
-    profitBeforeExpenses: profitBeforeExpenses,
+    totalProfitBeforeOffloading: totalProfitBeforeOffloading,
     netProfit: netProfit,
     offloadingAmount: offloadingAmount,
     debtAmount: debtAmount,
-    cashReceived: cashReceived,
-    cashInHand: cashInHand,
     debitTotal: totalDeductions,
     balance: balance,
     note,
@@ -224,12 +184,10 @@ const updateReceipt = async (req, res) => {
   receipt.less = data.less;
   receipt.subTotal = data.subTotal;
   receipt.totalCostPrice = data.totalCostPrice;
-  receipt.profitBeforeExpenses = data.profitBeforeExpenses;
+  receipt.totalProfitBeforeOffloading = data.totalProfitBeforeOffloading;
   receipt.netProfit = data.netProfit;
   receipt.offloadingAmount = data.offloadingAmount;
   receipt.debtAmount = data.debtAmount;
-  receipt.cashReceived = data.cashReceived;
-  receipt.cashInHand = data.cashInHand;
   receipt.debitTotal = data.debitTotal;
   receipt.balance = data.balance;
   if (note !== undefined) receipt.note = data.note;
@@ -303,10 +261,10 @@ const clearReceipts = async (req, res) => {
 };
 
 /* =========================
-   GET RECEIPT IMAGE (PNG) - MATCHES ORIGINAL TEMPLATE
+   GET RECEIPT HTML (for HTML2Canvas) - RETURNS HTML INSTEAD OF IMAGE
 ========================= */
 
-const getReceiptPdf = async (req, res) => {
+const getReceiptHTML = async (req, res) => {
     try {
         const receipt = await Receipt.findById(req.params.id);
         if (!receipt) return res.status(404).json({ message: 'Not found' });
@@ -359,9 +317,9 @@ const getReceiptPdf = async (req, res) => {
                 balanceAmount: formatCurrency(finalBalance)
             });
 
-            return await generateImageResponse(html, `customer-receipt-${receipt.receiptNumber}`, res);
+            res.setHeader('Content-Type', 'text/html');
+            res.send(html);
         } else {
-            // COMPANY RECEIPT - Matches their original template structure
             let totalSellingPrice = 0;
             let totalProfit = 0;
             const profits = [];
@@ -373,19 +331,18 @@ const getReceiptPdf = async (req, res) => {
                 const initialRate = item.initialRate || rate;
                 const effectiveQty = Math.max(0, originalQty - dust);
                 
-                const iAmount = effectiveQty * initialRate;
+                const iAmount = originalQty * initialRate;
                 const fAmount = effectiveQty * rate;
                 const profit = fAmount - iAmount;
                 
                 totalSellingPrice += fAmount;
-                if (profit !== 0) {
-                    totalProfit += profit;
-                    profits.push({ 
-                        name: item.description || '', 
-                        amount: formatCurrency(Math.abs(profit)), 
-                        isPositive: profit > 0 
-                    });
-                }
+                totalProfit += profit;
+                
+                profits.push({ 
+                    name: item.description || '', 
+                    amount: formatCurrency(Math.abs(profit)), 
+                    isPositive: profit > 0 
+                });
                 
                 return {
                     description: item.description || '',
@@ -395,15 +352,13 @@ const getReceiptPdf = async (req, res) => {
                     fRate: formatNumber(rate),
                     iAmount: formatNumber(iAmount),
                     fAmount: formatNumber(fAmount),
-                    profitFormatted: formatCurrency(Math.abs(profit)),
-                    isProfitPositive: profit > 0,
                     odd: index % 2 === 1
                 };
             });
 
+            const netProfit = Math.max(0, totalProfit - offloadingAmount);
             const finalBalance = Math.max(0, totalSellingPrice - totalDeductions);
 
-            // Pass all data to the original template
             const html = compiledCompanyTemplate({
                 logoUrl, day, month, year,
                 companyName: companyName,
@@ -415,19 +370,18 @@ const getReceiptPdf = async (req, res) => {
                 offloadingAmount: formatNumber(offloadingAmount),
                 debtAmount: formatNumber(debtAmount),
                 profits: profits,
-                totalProfit: formatCurrency(totalProfit),
+                totalProfit: formatCurrency(netProfit),
                 creditAmount: formatCurrency(totalSellingPrice),
                 debitAmount: formatCurrency(totalDeductions),
                 balanceAmount: formatCurrency(finalBalance)
             });
 
-            return await generateImageResponse(html, `company-receipt-${receipt.receiptNumber}`, res);
+            res.setHeader('Content-Type', 'text/html');
+            res.send(html);
         }
     } catch (error) {
-        console.error('Error in getReceiptPdf:', error);
-        if (!res.headersSent) {
-            res.status(500).json({ error: 'Failed to generate receipt', details: error.message });
-        }
+        console.error('Error in getReceiptHTML:', error);
+        res.status(500).json({ error: 'Failed to generate receipt', details: error.message });
     }
 };
 
@@ -443,5 +397,5 @@ module.exports = {
     deleteReceipt,
     getReceiptSummary,
     clearReceipts,
-    getReceiptPdf
+    getReceiptHTML  // Changed from getReceiptPdf to getReceiptHTML
 };
